@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard - Golden Palm Resort</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 4px 0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+        }
+        .revenue-card {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+        .occupancy-card {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+        .booking-card {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .badge-pending { background-color: #f39c12; }
+        .badge-confirmed { background-color: #27ae60; }
+        .badge-cancelled { background-color: #e74c3c; }
+        .badge-completed { background-color: #8e44ad; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar p-3">
+                    <div class="text-center mb-4">
+                        <h4 class="text-white mb-0">
+                            <i class="fas fa-hotel me-2"></i>
+                            Golden Palm
+                        </h4>
+                        <small class="text-white-50">Manager Dashboard</small>
+                    </div>
+                    
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            <i class="fas fa-chart-line"></i> Operations Overview
+                        </a>
+                        <a class="nav-link" href="#bookings" data-bs-toggle="tab">
+                            <i class="fas fa-calendar-check"></i> Booking Management
+                        </a>
+                        <a class="nav-link" href="#staff" data-bs-toggle="tab">
+                            <i class="fas fa-users-cog"></i> Staff Management
+                        </a>
+                        <a class="nav-link" href="#rooms" data-bs-toggle="tab">
+                            <i class="fas fa-bed"></i> Room Operations
+                        </a>
+                        <a class="nav-link" href="#analytics" data-bs-toggle="tab">
+                            <i class="fas fa-chart-bar"></i> Analytics & Reports
+                        </a>
+                    </nav>
+                    
+                    <div class="mt-auto pt-3">
+                        <button class="btn btn-outline-light btn-sm w-100" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10">
+                <div class="p-4">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="mb-1" id="pageTitle">Operations Overview</h2>
+                            <p class="text-muted mb-0">Welcome back, Manager!</p>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">Last updated: <span id="lastUpdated"></span></small>
+                        </div>
+                    </div>
+                    
+                    <!-- Alert Container -->
+                    <div id="alertContainer"></div>
+                    
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Dashboard Tab -->
+                        <div class="tab-pane fade show active" id="dashboard">
+                            <!-- Key Metrics Row -->
+                            <div class="row mb-4">
+                                <div class="col-md-3 mb-3">
+                                    <div class="card stat-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="occupancyRate">0%</h3>
+                                                    <p class="mb-0">Occupancy Rate</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-chart-pie fa-2x opacity-75"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card revenue-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="todayRevenue">$0</h3>
+                                                    <p class="mb-0">Today's Revenue</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card booking-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="todayCheckIns">0</h3>
+                                                    <p class="mb-0">Today's Check-ins</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-sign-in-alt fa-2x opacity-75"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card occupancy-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="pendingBookings">0</h3>
+                                                    <p class="mb-0">Pending Approvals</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-clock fa-2x opacity-75"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Room Status Overview -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-bed me-2"></i>Room Status Overview</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-3">
+                                                    <h4 class="text-success" id="availableRooms">0</h4>
+                                                    <small>Available</small>
+                                                </div>
+                                                <div class="col-3">
+                                                    <h4 class="text-danger" id="occupiedRooms">0</h4>
+                                                    <small>Occupied</small>
+                                                </div>
+                                                <div class="col-3">
+                                                    <h4 class="text-warning" id="maintenanceRooms">0</h4>
+                                                    <small>Maintenance</small>
+                                                </div>
+                                                <div class="col-3">
+                                                    <h4 class="text-info" id="totalRooms">0</h4>
+                                                    <small>Total</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Staff Overview</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-6">
+                                                    <h4 class="text-primary" id="frontDeskStaff">0</h4>
+                                                    <small>Front Desk</small>
+                                                </div>
+                                                <div class="col-6">
+                                                    <h4 class="text-success" id="paymentOfficers">0</h4>
+                                                    <small>Payment Officers</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-primary w-100" onclick="showPendingBookings()">
+                                                        <i class="fas fa-clock me-1"></i> Review Pending Bookings
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-success w-100" onclick="viewTodayCheckIns()">
+                                                        <i class="fas fa-calendar-day me-1"></i> Today's Check-ins
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-warning w-100" onclick="viewMaintenanceRooms()">
+                                                        <i class="fas fa-tools me-1"></i> Maintenance Rooms
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-info w-100" onclick="generateReport()">
+                                                        <i class="fas fa-file-alt me-1"></i> Generate Report
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bookings Tab -->
+                        <div class="tab-pane fade" id="bookings">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Booking Management</h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-2" onclick="loadPendingBookings()">
+                                            <i class="fas fa-clock me-1"></i> Pending Only
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="loadAllBookings()">
+                                            <i class="fas fa-list me-1"></i> All Bookings
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="bookingsTable">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Reference</th>
+                                                    <th>Guest</th>
+                                                    <th>Room</th>
+                                                    <th>Check-in</th>
+                                                    <th>Check-out</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="bookingsTableBody">
+                                                <!-- Bookings will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Staff Tab -->
+                        <div class="tab-pane fade" id="staff">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><i class="fas fa-users-cog me-2"></i>Staff Management</h5>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+                                        <i class="fas fa-plus me-1"></i> Add Staff Member
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="staffTable">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Username</th>
+                                                    <th>Email</th>
+                                                    <th>Role</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="staffTableBody">
+                                                <!-- Staff will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rooms Tab -->
+                        <div class="tab-pane fade" id="rooms">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-bed me-2"></i>Room Operations</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="roomsTable">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Room Number</th>
+                                                    <th>Type</th>
+                                                    <th>Floor</th>
+                                                    <th>Capacity</th>
+                                                    <th>Price</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="roomsTableBody">
+                                                <!-- Rooms will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analytics Tab -->
+                        <div class="tab-pane fade" id="analytics">
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Revenue Analytics</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-6 mb-3">
+                                                    <h4 class="text-success" id="analyticsWeeklyRevenue">$0</h4>
+                                                    <small>Weekly Revenue</small>
+                                                </div>
+                                                <div class="col-6 mb-3">
+                                                    <h4 class="text-primary" id="analyticsMonthlyRevenue">$0</h4>
+                                                    <small>Monthly Revenue</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Occupancy Analytics</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-6 mb-3">
+                                                    <h4 class="text-info" id="analyticsOccupancyRate">0%</h4>
+                                                    <small>Current Occupancy</small>
+                                                </div>
+                                                <div class="col-6 mb-3">
+                                                    <h4 class="text-warning" id="analyticsAvgStay">0</h4>
+                                                    <small>Avg Stay (days)</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Staff Modal -->
+    <div class="modal fade" id="addStaffModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Staff Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addStaffForm">
+                        <div class="mb-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="firstName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="lastName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control" name="phone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" name="role" required>
+                                <option value="">Select Role</option>
+                                <option value="FRONT_DESK">Front Desk</option>
+                                <option value="PAYMENT_OFFICER">Payment Officer</option>
+                                <option value="GUEST">Guest</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addStaffMember()">Add Staff Member</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/manager.js"></script>
+</body>
+</html>

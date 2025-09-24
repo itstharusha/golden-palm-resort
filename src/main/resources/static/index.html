@@ -197,9 +197,10 @@
                             <i class="fas fa-user me-1"></i><span id="navUsername">Account</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/my-bookings.html">My Bookings</a></li>
+                            <li id="dashboardLink" class="d-none"><a class="dropdown-item" href="#" id="dashboardLinkHref"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/my-bookings.html"><i class="fas fa-calendar-check me-2"></i>My Bookings</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" id="logoutLink">Logout</a></li>
+                            <li><a class="dropdown-item" href="#" id="logoutLink"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -660,6 +661,76 @@
             modal.addEventListener('hidden.bs.modal', function() {
                 document.body.removeChild(modal);
             });
+        }
+
+        // Authentication and navigation handling
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthenticationStatus();
+            
+            // Handle logout
+            document.getElementById('logoutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userInfo');
+                location.reload();
+            });
+        });
+
+        function checkAuthenticationStatus() {
+            const authToken = localStorage.getItem('authToken');
+            const userInfo = localStorage.getItem('userInfo');
+            
+            if (authToken && userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    showUserMenu(user);
+                } catch (error) {
+                    console.error('Error parsing user info:', error);
+                    showLoginButton();
+                }
+            } else {
+                showLoginButton();
+            }
+        }
+
+        function showUserMenu(user) {
+            // Hide login button, show user menu
+            document.getElementById('loginNav').classList.add('d-none');
+            document.getElementById('userMenuNav').classList.remove('d-none');
+            document.getElementById('myBookingsNav').classList.remove('d-none');
+            
+            // Set username
+            document.getElementById('navUsername').textContent = user.firstName || user.username;
+            
+            // Show dashboard link based on role
+            const dashboardLink = document.getElementById('dashboardLink');
+            const dashboardHref = document.getElementById('dashboardLinkHref');
+            
+            if (user.role === 'ADMIN') {
+                dashboardLink.classList.remove('d-none');
+                dashboardHref.href = '/admin.html';
+                dashboardHref.innerHTML = '<i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard';
+            } else if (user.role === 'MANAGER') {
+                dashboardLink.classList.remove('d-none');
+                dashboardHref.href = '/manager.html';
+                dashboardHref.innerHTML = '<i class="fas fa-tachometer-alt me-2"></i>Manager Dashboard';
+            } else if (user.role === 'FRONT_DESK') {
+                dashboardLink.classList.remove('d-none');
+                dashboardHref.href = '/frontdesk.html';
+                dashboardHref.innerHTML = '<i class="fas fa-tachometer-alt me-2"></i>Front Desk';
+            } else if (user.role === 'PAYMENT_OFFICER') {
+                dashboardLink.classList.remove('d-none');
+                dashboardHref.href = '/payment-officer.html';
+                dashboardHref.innerHTML = '<i class="fas fa-tachometer-alt me-2"></i>Payment Dashboard';
+            }
+        }
+
+        function showLoginButton() {
+            // Show login button, hide user menu
+            document.getElementById('loginNav').classList.remove('d-none');
+            document.getElementById('userMenuNav').classList.add('d-none');
+            document.getElementById('myBookingsNav').classList.add('d-none');
+            document.getElementById('dashboardLink').classList.add('d-none');
         }
     </script>
 

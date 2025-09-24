@@ -185,6 +185,8 @@
                 const role = (data.user.role || '').toUpperCase();
                 if (role === 'ADMIN') {
                     window.location.href = 'admin.html';
+                } else if (role === 'MANAGER') {
+                    window.location.href = 'manager.html';
                 } else if (role === 'FRONT_DESK') {
                     window.location.href = 'frontdesk.html';
                 } else if (role === 'PAYMENT_OFFICER') {

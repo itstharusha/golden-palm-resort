@@ -34,9 +34,10 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/admin/**").authenticated()
-                .requestMatchers("/api/frontdesk/**").authenticated()
-                .requestMatchers("/api/payment-officer/**").authenticated()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/manager/**").hasRole("MANAGER")
+                .requestMatchers("/api/frontdesk/**").hasAnyRole("FRONT_DESK", "MANAGER", "ADMIN")
+                .requestMatchers("/api/payment-officer/**").hasAnyRole("PAYMENT_OFFICER", "MANAGER", "ADMIN")
                 .requestMatchers("/api/rooms/**").permitAll()
                 .requestMatchers("/api/event-spaces/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/bookings/available-rooms").permitAll()
