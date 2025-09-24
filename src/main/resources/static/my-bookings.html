@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Bookings - Golden Palm Resort</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        body { padding-top: 70px; background-color: #f8f9fa; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .badge-status { font-size: 0.8rem; }
+        .booking-actions .btn { margin-right: 8px; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-palm-tree me-2"></i>Golden Palm Resort
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="my-bookings.html">My Bookings</a></li>
+                    <li class="nav-item" id="logoutNav"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="alertContainer"></div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">My Bookings</h2>
+            <a href="/" class="btn btn-outline-secondary"><i class="fas fa-plus me-2"></i>New Booking</a>
+        </div>
+
+        <div id="bookingsContainer" class="row g-3">
+            <!-- Booking cards will render here -->
+        </div>
+
+        <div id="emptyState" class="empty-state d-none">
+            <i class="fas fa-suitcase-rolling fa-3x mb-3"></i>
+            <h5>No bookings yet</h5>
+            <p>When you make a booking, it will appear here.</p>
+            <a href="/" class="btn btn-primary">Book a Room</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure user is logged in
+            const token = localStorage.getItem('authToken');
+            const user = JSON.parse(localStorage.getItem('userInfo') || 'null');
+            if (!token || !user) {
+                showAlert('Please login to view your bookings.', 'warning');
+                setTimeout(() => window.location.href = 'login.html', 1200);
+                return;
+            }
+            loadCombinedBookings();
+        });
+
+        // Load both room and event bookings and render as a single list
+        async function loadCombinedBookings() {
+            toggleEmpty(true);
+            const token = localStorage.getItem('authToken');
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            try {
+                // Fetch room bookings (requires auth)
+                const roomResp = await fetch('/api/bookings/user', { headers });
+                if (roomResp.status === 401) {
+                    showAlert('Your session expired. Please login again.', 'warning');
+                    setTimeout(() => window.location.href = 'login.html', 1200);
+                    return;
+                }
+                const roomBookings = (await roomResp.json()) || [];
+
+                // Fetch event bookings (currently controller may not use auth; include header anyway)
+                let eventBookings = [];
+                try {
+                    const eventResp = await fetch('/api/event-bookings', { headers });
+                    if (eventResp.ok) {
+                        eventBookings = (await eventResp.json()) || [];
+                    }
+                } catch (e) {
+                    // Non-fatal if event endpoint not available
+                    console.warn('Event bookings fetch skipped/failed:', e);
+                }
+
+                // Normalize into a single list with type badges
+                const normalized = [];
+                for (const b of roomBookings) {
+                    normalized.push({
+                        type: 'ROOM',
+                        bookingReference: b.bookingReference,
+                        title: `Room ${b.roomNumber || b.roomId || ''} ${b.roomType ? '(' + b.roomType + ')' : ''}`.trim(),
+                        subtitle: `${b.checkInDate} → ${b.checkOutDate}`,
+                        guests: b.guestCount,
+                        amount: b.totalAmount || 0,
+                        status: b.status,
+                        createdAt: b.createdAt,
+                        actions: { canCancel: b.status === 'CONFIRMED' || b.status === 'PENDING', room: true }
+                    });
+                }
+                for (const e of eventBookings) {
+                    normalized.push({
+                        type: 'EVENT',
+                        bookingReference: e.bookingReference,
+                        title: e.eventSpace?.name ? `Event @ ${e.eventSpace.name}` : (e.eventType || 'Event'),
+                        subtitle: `${e.eventDate} ${e.startTime || ''}${e.endTime ? ' → ' + e.endTime : ''}`.trim(),
+                        guests: e.expectedGuests,
+                        amount: e.totalAmount || 0,
+                        status: e.status,
+                        createdAt: e.createdAt,
+                        id: e.id,
+                        actions: { canCancel: e.status === 'CONFIRMED' || e.status === 'PENDING', room: false }
+                    });
+                }
+
+                // Sort newest first by createdAt if present, else leave as-is
+                normalized.sort((a, b) => {
+                    const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                    const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                    return db - da;
+                });
+
+                renderCombined(normalized);
+            } catch (err) {
+                console.error('Error loading combined bookings:', err);
+                showAlert('Failed to load bookings. Please try again.', 'danger');
+            }
+        }
+
+        function renderCombined(list) {
+            const container = document.getElementById('bookingsContainer');
+            container.innerHTML = '';
+            if (!list.length) { toggleEmpty(true); return; }
+            toggleEmpty(false);
+
+            list.forEach(item => {
+                const statusBadge = getStatusBadge(item.status);
+                const typeBadge = item.type === 'EVENT' ? '<span class="badge bg-info me-2">Event</span>' : '<span class="badge bg-primary me-2">Room</span>';
+                const guestsHtml = item.guests ? `<span class="ms-3"><i class="fas fa-users me-1"></i>Guests: ${item.guests}</span>` : '';
+                const card = document.createElement('div');
+                card.className = 'col-12';
+                card.innerHTML = `
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1">${typeBadge} ${escapeHtml(item.title)}</h5>
+                                    <div class="text-muted small mb-2">
+                                        <i class="fas fa-calendar-check me-1"></i>${escapeHtml(item.subtitle)}
+                                        ${guestsHtml}
+                                    </div>
+                                    <div>
+                                        <span class="badge badge-status ${statusBadge.class}">${statusBadge.text}</span>
+                                        <span class="ms-2 text-muted small">Ref: ${escapeHtml(item.bookingReference || '')}</span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="h5 mb-2">LKR ${(item.amount || 0).toLocaleString()}</div>
+                                    <div class="booking-actions">
+                                        ${item.actions.canCancel ? `
+                                        <button class="btn btn-sm btn-outline-danger" onclick="${item.actions.room ? `cancelBooking('${item.bookingReference}')` : `cancelEventBooking(${item.id})`}">
+                                            <i class="fas fa-ban me-1"></i>Cancel
+                                        </button>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                container.appendChild(card);
+            });
+        }
+
+        async function cancelBooking(bookingReference) {
+            if (!confirm('Are you sure you want to cancel this booking?')) return;
+            try {
+                const resp = await fetch(`/api/bookings/${bookingReference}/cancel`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                });
+                if (resp.ok) {
+                    showAlert('Booking cancelled successfully.', 'success');
+                    loadCombinedBookings();
+                } else if (resp.status === 401) {
+                    showAlert('Your session expired. Please login again.', 'warning');
+                    setTimeout(() => window.location.href = 'login.html', 1200);
+                } else {
+                    showAlert('Failed to cancel booking.', 'danger');
+                }
+            } catch (err) {
+                console.error('Cancel booking error:', err);
+                showAlert('Failed to cancel booking.', 'danger');
+            }
+        }
+
+        async function cancelEventBooking(id) {
+            if (!confirm('Are you sure you want to cancel this event booking?')) return;
+            try {
+                const resp = await fetch(`/api/event-bookings/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                });
+                if (resp.ok) {
+                    showAlert('Event booking cancelled successfully.', 'success');
+                    loadCombinedBookings();
+                } else if (resp.status === 401) {
+                    showAlert('Your session expired. Please login again.', 'warning');
+                    setTimeout(() => window.location.href = 'login.html', 1200);
+                } else {
+                    showAlert('Failed to cancel event booking.', 'danger');
+                }
+            } catch (err) {
+                console.error('Cancel event booking error:', err);
+                showAlert('Failed to cancel event booking.', 'danger');
+            }
+        }
+
+        function getStatusBadge(status) {
+            switch ((status || '').toUpperCase()) {
+                case 'CONFIRMED': return { class: 'bg-success', text: 'Confirmed' };
+                case 'PENDING': return { class: 'bg-warning text-dark', text: 'Pending' };
+                case 'CANCELLED': return { class: 'bg-danger', text: 'Cancelled' };
+                case 'COMPLETED': return { class: 'bg-primary', text: 'Completed' };
+                default: return { class: 'bg-secondary', text: status || 'Unknown' };
+            }
+        }
+
+        function toggleEmpty(show) {
+            document.getElementById('emptyState').classList.toggle('d-none', !show);
+            document.getElementById('bookingsContainer').classList.toggle('d-none', show);
+        }
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            alertContainer.appendChild(alert);
+            setTimeout(() => { try { alert.remove(); } catch(_){} }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            window.location.href = 'login.html';
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&<>"]+/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));
+        }
+    </script>
+</body>
+</html>

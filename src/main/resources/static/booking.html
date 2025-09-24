@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Room - Golden Palm Resort</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Custom CSS -->
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .form-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .form-control, .form-select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+        }
+        .btn-primary {
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+        }
+        .guest-info {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-umbrella-beach me-2"></i>Golden Palm Resort
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/booking.html">Book Now</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/rooms.html">Rooms</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact.html">Contact</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="/login.html" class="btn btn-outline-light me-2">Login</a>
+                    <a href="/register.html" class="btn btn-light">Register</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Booking Form -->
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="form-section">
+                    <div class="form-header">
+                        <h2 class="mb-0">Book Your Stay</h2>
+                        <p class="text-muted mb-0">Fill in the details below to complete your reservation</p>
+                    </div>
+                    
+                    <form id="bookingForm">
+                        <!-- Hidden room ID field (will be set when selecting a room) -->
+                        <input type="hidden" id="roomId" name="roomId" value="">
+                        
+                        <!-- Booking For -->
+                        <div class="mb-4">
+                            <label class="form-label">Who is this booking for?</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="bookingFor" id="bookingForSelf" value="self" checked>
+                                    <label class="form-check-label" for="bookingForSelf">
+                                        Myself
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="bookingFor" id="bookingForGuest" value="guest">
+                                    <label class="form-check-label" for="bookingForGuest">
+                                        Someone else
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Guest Information (initially hidden) -->
+                        <div id="guestInfoSection" class="guest-info d-none">
+                            <h5 class="mb-3">Guest Information</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="guestFirstName" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="guestFirstName" name="guestFirstName">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="guestLastName" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="guestLastName" name="guestLastName">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="guestEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="guestEmail" name="guestEmail">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="guestPhone" class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" id="guestPhone" name="guestPhone">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Dates and Guests -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="checkInDate" class="form-label">Check-in Date</label>
+                                <input type="date" class="form-control" id="checkInDate" name="checkInDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="checkOutDate" class="form-label">Check-out Date</label>
+                                <input type="date" class="form-control" id="checkOutDate" name="checkOutDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="guestCount" class="form-label">Number of Guests</label>
+                                <select class="form-select" id="guestCount" name="guestCount" required>
+                                    <option value="1">1 Guest</option>
+                                    <option value="2" selected>2 Guests</option>
+                                    <option value="3">3 Guests</option>
+                                    <option value="4">4 Guests</option>
+                                    <option value="5">5 Guests</option>
+                                    <option value="6">6 Guests</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Special Requests -->
+                        <div class="mb-4">
+                            <label for="specialRequests" class="form-label">Special Requests (Optional)</label>
+                            <textarea class="form-control" id="specialRequests" name="specialRequests" rows="3" placeholder="Any special requirements or requests?"></textarea>
+                        </div>
+                        
+                        <!-- Additional Options -->
+                        <div class="mb-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="requireAirportPickup" name="requireAirportPickup">
+                                <label class="form-check-label" for="requireAirportPickup">
+                                    I require airport pickup service
+                                </label>
+                            </div>
+                            <div class="mb-2">
+                                <label for="flightNumber" class="form-label">Flight Number (if known)</label>
+                                <input type="text" class="form-control" id="flightNumber" name="flightNumber" placeholder="e.g., UL123">
+                            </div>
+                            <div>
+                                <label for="specialAccommodations" class="form-label">Special Accommodations</label>
+                                <input type="text" class="form-control" id="specialAccommodations" name="specialAccommodations" placeholder="e.g., Wheelchair access, dietary restrictions">
+                            </div>
+                        </div>
+                        
+                        <!-- Terms and Conditions -->
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="termsAndConditions" required>
+                            <label class="form-check-label" for="termsAndConditions">
+                                I agree to the <a href="/terms.html" target="_blank">Terms and Conditions</a> and 
+                                <a href="/privacy.html" target="_blank">Privacy Policy</a>
+                            </label>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-calendar-check me-2"></i>Complete Booking
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Booking Summary (can be updated dynamically with JavaScript) -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Booking Summary</h5>
+                        <div id="bookingSummary">
+                            <p class="text-muted mb-0">Your booking details will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Golden Palm Resort</h5>
+                    <p>Your perfect getaway destination in paradise.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/about.html" class="text-white">About Us</a></li>
+                        <li><a href="/rooms.html" class="text-white">Rooms & Suites</a></li>
+                        <li><a href="/dining.html" class="text-white">Dining</a></li>
+                        <li><a href="/contact.html" class="text-white">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact Us</h5>
+                    <address>
+                        123 Beachfront Road<br>
+                        Colombo, Sri Lanka<br>
+                        <i class="fas fa-phone me-2"></i> +94 11 234 5678<br>
+                        <i class="fas fa-envelope me-2"></i> info@goldenpalmresort.com
+                    </address>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p class="mb-0">&copy; 2025 Golden Palm Resort. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Custom JS -->
+    <script src="/js/booking-form.js"></script>
+    
+    <script>
+        // Initialize date picker
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set minimum date to today
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            // Format dates as YYYY-MM-DD
+            const formatDate = (date) => {
+                return date.toISOString().split('T')[0];
+            };
+            
+            // Set min attributes for date inputs
+            document.getElementById('checkInDate').min = formatDate(today);
+            document.getElementById('checkOutDate').min = formatDate(tomorrow);
+            
+            // Initialize flatpickr
+            flatpickr("input[type=date]", {
+                minDate: "today",
+                dateFormat: "Y-m-d"
+            });
+            
+            // Get room ID from URL if present
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('roomId');
+            if (roomId) {
+                document.getElementById('roomId').value = roomId;
+            }
+        });
+    </script>
+</body>
+</html>

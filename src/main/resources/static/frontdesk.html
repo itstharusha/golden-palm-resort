@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Front Desk Dashboard - Golden Palm Resort</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 4px 0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .stat-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .stat-card.success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar p-3">
+                    <div class="text-center mb-4">
+                        <h4 class="text-white mb-0">
+                            <i class="fas fa-concierge-bell me-2"></i>
+                            Front Desk
+                        </h4>
+                        <small class="text-white-50">Golden Palm Resort</small>
+                    </div>
+                    
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="#checkins" data-bs-toggle="tab">
+                            <i class="fas fa-sign-in-alt"></i> Check-ins
+                        </a>
+                        <a class="nav-link" href="#checkouts" data-bs-toggle="tab">
+                            <i class="fas fa-sign-out-alt"></i> Check-outs
+                        </a>
+                        <a class="nav-link" href="#pending" data-bs-toggle="tab">
+                            <i class="fas fa-clock"></i> Pending Bookings
+                        </a>
+                        <a class="nav-link" href="#guests" data-bs-toggle="tab">
+                            <i class="fas fa-users"></i> Current Guests
+                        </a>
+                        <a class="nav-link" href="#all-bookings" data-bs-toggle="tab">
+                            <i class="fas fa-list-alt"></i> All Bookings
+                        </a>
+                    </nav>
+                    
+                    <div class="mt-auto pt-3">
+                        <button class="btn btn-outline-light btn-sm w-100" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10">
+                <div class="p-4">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="mb-1" id="pageTitle">Dashboard</h2>
+                            <p class="text-muted mb-0">Welcome back, Front Desk Staff!</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary" onclick="refreshData()">
+                                <i class="fas fa-sync-alt me-1"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Alert Container -->
+                    <div id="alertContainer"></div>
+                    
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Dashboard Tab -->
+                        <div class="tab-pane fade show active" id="dashboard">
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="totalCheckins">0</h3>
+                                                    <p class="mb-0">Today's Check-ins</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-sign-in-alt fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card warning">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="totalCheckouts">0</h3>
+                                                    <p class="mb-0">Today's Check-outs</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-sign-out-alt fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card success">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="pendingBookings">0</h3>
+                                                    <p class="mb-0">Pending Bookings</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-clock fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="currentGuests">0</h3>
+                                                    <p class="mb-0">Current Guests</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-users fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="card">
+                                        <div class="card-header bg-transparent">
+                                            <h5 class="mb-0">Today's Arrivals</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Guest Name</th>
+                                                            <th>Room</th>
+                                                            <th>Arrival Time</th>
+                                                            <th>Status</th>
+                                                            <th>Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="todayArrivalsTable">
+                                                        <!-- Today's arrivals will be loaded here -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-header bg-transparent">
+                                            <h5 class="mb-0">Quick Actions</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-outline-success" onclick="showCheckInModal()">
+                                                    <i class="fas fa-sign-in-alt me-2"></i>Check-in Guest
+                                                </button>
+                                                <button class="btn btn-outline-warning" onclick="showCheckOutModal()">
+                                                    <i class="fas fa-sign-out-alt me-2"></i>Check-out Guest
+                                                </button>
+                                                <button class="btn btn-outline-info" onclick="showPendingBookings()">
+                                                    <i class="fas fa-clock me-2"></i>View Pending
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Check-ins Tab -->
+                        <div class="tab-pane fade" id="checkins">
+                            <div class="card">
+                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Check-in Management</h5>
+                                    <button class="btn btn-primary" onclick="showCheckInModal()">
+                                        <i class="fas fa-plus me-1"></i> New Check-in
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Booking ID</th>
+                                                    <th>Guest Name</th>
+                                                    <th>Room</th>
+                                                    <th>Check-in Date</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="checkinsTable">
+                                                <!-- Check-ins will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Check-outs Tab -->
+                        <div class="tab-pane fade" id="checkouts">
+                            <div class="card">
+                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Check-out Management</h5>
+                                    <button class="btn btn-primary" onclick="showCheckOutModal()">
+                                        <i class="fas fa-plus me-1"></i> New Check-out
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Booking ID</th>
+                                                    <th>Guest Name</th>
+                                                    <th>Room</th>
+                                                    <th>Check-out Date</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="checkoutsTable">
+                                                <!-- Check-outs will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pending Bookings Tab -->
+                        <div class="tab-pane fade" id="pending">
+                            <div class="card">
+                                <div class="card-header bg-transparent">
+                                    <h5 class="mb-0">Pending Bookings</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Booking ID</th>
+                                                    <th>Guest Name</th>
+                                                    <th>Room/Event</th>
+                                                    <th>Check-in Date</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="pendingBookingsTable">
+                                                <!-- Pending bookings will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Current Guests Tab -->
+                        <div class="tab-pane fade" id="guests">
+                            <div class="card">
+                                <div class="card-header bg-transparent">
+                                    <h5 class="mb-0">Current Guests</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Guest Name</th>
+                                                    <th>Room</th>
+                                                    <th>Check-in Date</th>
+                                                    <th>Check-out Date</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="currentGuestsTable">
+                                                <!-- Current guests will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- All Bookings Tab -->
+                        <div class="tab-pane fade" id="all-bookings">
+                            <div class="card">
+                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">All Bookings</h5>
+                                    <div class="d-flex gap-2">
+                                        <input type="text" class="form-control form-control-sm" id="bookingSearch" placeholder="Search bookings..." style="width: 200px;">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="refreshAllBookings()">
+                                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Booking Ref</th>
+                                                    <th>Guest Name</th>
+                                                    <th>Type</th>
+                                                    <th>Room/Event</th>
+                                                    <th>Date</th>
+                                                    <th>Guest Count</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="allBookingsTable">
+                                                <!-- All bookings will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Details Modal -->
+    <div class="modal fade" id="bookingDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Booking Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Guest Information</h6>
+                            <p><strong>Name:</strong> <span id="detailGuestName"></span></p>
+                            <p><strong>Email:</strong> <span id="detailGuestEmail"></span></p>
+                            <p><strong>Phone:</strong> <span id="detailGuestPhone"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Booking Information</h6>
+                            <p><strong>Reference:</strong> <span id="detailBookingRef"></span></p>
+                            <p><strong>Type:</strong> <span id="detailBookingType"></span></p>
+                            <p><strong>Status:</strong> <span id="detailBookingStatus"></span></p>
+                            <p><strong>Created:</strong> <span id="detailCreatedAt"></span></p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Booking Details</h6>
+                            <p><strong>Room/Event:</strong> <span id="detailRoomEvent"></span></p>
+                            <p><strong>Date:</strong> <span id="detailDate"></span></p>
+                            <p><strong>Guest Count:</strong> <span id="detailGuestCount"></span></p>
+                            <p><strong>Total Amount:</strong> <span id="detailTotalAmount"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Special Requests</h6>
+                            <p id="detailSpecialRequests">No special requests</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="editBooking()">Edit Booking</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Booking Modal -->
+    <div class="modal fade" id="editBookingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Booking</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editBookingForm">
+                        <input type="hidden" id="editBookingRef" name="bookingReference">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Guest Count</label>
+                                    <input type="number" class="form-control" id="editGuestCount" name="guestCount" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-select" id="editStatus" name="status" required>
+                                        <option value="PENDING">Pending</option>
+                                        <option value="CONFIRMED">Confirmed</option>
+                                        <option value="CHECKED_IN">Checked In</option>
+                                        <option value="CHECKED_OUT">Checked Out</option>
+                                        <option value="CANCELLED">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="editDate" name="date" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Time (for events)</label>
+                                    <input type="time" class="form-control" id="editTime" name="time">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Special Requests</label>
+                            <textarea class="form-control" id="editSpecialRequests" name="specialRequests" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBookingChanges()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Check-in Modal -->
+    <div class="modal fade" id="checkInModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Check-in Guest</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="checkInForm">
+                        <div class="mb-3">
+                            <label class="form-label">Booking Reference</label>
+                            <input type="text" class="form-control" name="bookingReference" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Guest Name</label>
+                            <input type="text" class="form-control" name="guestName" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Room Number</label>
+                            <input type="text" class="form-control" name="roomNumber" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Check-in Time</label>
+                            <input type="datetime-local" class="form-control" name="checkInTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Special Requests</label>
+                            <textarea class="form-control" name="specialRequests" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="processCheckIn()">Check-in</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Check-out Modal -->
+    <div class="modal fade" id="checkOutModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Check-out Guest</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="checkOutForm">
+                        <div class="mb-3">
+                            <label class="form-label">Booking Reference</label>
+                            <input type="text" class="form-control" name="bookingReference" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Guest Name</label>
+                            <input type="text" class="form-control" name="guestName" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Room Number</label>
+                            <input type="text" class="form-control" name="roomNumber" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Check-out Time</label>
+                            <input type="datetime-local" class="form-control" name="checkOutTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Additional Charges</label>
+                            <input type="number" class="form-control" name="additionalCharges" step="0.01" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="processCheckOut()">Check-out</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Booking Modal -->
+    <div class="modal fade" id="confirmBookingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Booking</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="confirmBookingForm">
+                        <div class="mb-3">
+                            <label class="form-label">Booking Reference</label>
+                            <input type="text" class="form-control" name="bookingReference" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Guest Name</label>
+                            <input type="text" class="form-control" name="guestName" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Room/Event Space</label>
+                            <input type="text" class="form-control" name="roomEvent" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Total Amount</label>
+                            <input type="text" class="form-control" name="totalAmount" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Payment Status</label>
+                            <select class="form-select" name="paymentStatus" required>
+                                <option value="PAID">Paid</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="PARTIAL">Partial</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmation Notes</label>
+                            <textarea class="form-control" name="confirmationNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="confirmBooking()">Confirm Booking</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/frontdesk.js"></script>
+</body>
+</html> 

@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Golden Palm Resort</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 4px 0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar p-3">
+                    <div class="text-center mb-4">
+                        <h4 class="text-white mb-0">
+                            <i class="fas fa-hotel me-2"></i>
+                            Golden Palm
+                        </h4>
+                        <small class="text-white-50">Admin Dashboard</small>
+                    </div>
+                    
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="#users" data-bs-toggle="tab">
+                            <i class="fas fa-users"></i> User Management
+                        </a>
+                        <a class="nav-link" href="#rooms" data-bs-toggle="tab">
+                            <i class="fas fa-bed"></i> Room Management
+                        </a>
+                        <a class="nav-link" href="#events" data-bs-toggle="tab">
+                            <i class="fas fa-calendar-alt"></i> Event Spaces
+                        </a>
+                        <a class="nav-link" href="#bookings" data-bs-toggle="tab">
+                            <i class="fas fa-calendar-check"></i> Bookings
+                        </a>
+                    </nav>
+                    
+                    <div class="mt-auto pt-3">
+                        <button class="btn btn-outline-light btn-sm w-100" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10">
+                <div class="p-4">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="mb-1" id="pageTitle">Dashboard</h2>
+                            <p class="text-muted mb-0">Welcome back, Admin!</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Alert Container -->
+                    <div id="alertContainer"></div>
+                    
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Dashboard Tab -->
+                        <div class="tab-pane fade show active" id="dashboard">
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="totalUsers">0</h3>
+                                                    <p class="mb-0">Total Users</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-users fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="totalRooms">0</h3>
+                                                    <p class="mb-0">Available Rooms</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-bed fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="totalBookings">0</h3>
+                                                    <p class="mb-0">Active Bookings</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-calendar-check fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h3 class="mb-1" id="totalRevenue">$0</h3>
+                                                    <p class="mb-0">Monthly Revenue</p>
+                                                </div>
+                                                <div class="align-self-center">
+                                                    <i class="fas fa-dollar-sign fa-2x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="card">
+                                        <div class="card-header bg-transparent">
+                                            <h5 class="mb-0">Recent Bookings</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Booking ID</th>
+                                                            <th>Guest</th>
+                                                            <th>Type</th>
+                                                            <th>Date</th>
+                                                            <th>Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="recentBookingsTable">
+                                                        <!-- Recent bookings will be loaded here -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-header bg-transparent">
+                                            <h5 class="mb-0">Quick Actions</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-outline-primary" onclick="showAddUserModal()">
+                                                    <i class="fas fa-user-plus me-2"></i>Add User
+                                                </button>
+                                                <button class="btn btn-outline-success" onclick="showAddRoomModal()">
+                                                    <i class="fas fa-bed me-2"></i>Add Room
+                                                </button>
+                                                <button class="btn btn-outline-info" onclick="showAddEventSpaceModal()">
+                                                    <i class="fas fa-calendar-plus me-2"></i>Add Event Space
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Users Tab -->
+                        <div class="tab-pane fade" id="users">
+                            <div class="card">
+                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">User Management</h5>
+                                    <button class="btn btn-primary" onclick="showAddUserModal()">
+                                        <i class="fas fa-plus me-1"></i> Add User
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Name</th>
+                                                    <th>Username</th>
+                                                    <th>Email</th>
+                                                    <th>Role</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="usersTable">
+                                                <!-- Users will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Rooms Tab -->
+                        <div class="tab-pane fade" id="rooms">
+                            <div class="card">
+                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Room Management</h5>
+                                    <button class="btn btn-primary" onclick="showAddRoomModal()">
+                                        <i class="fas fa-plus me-1"></i> Add Room
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Room #</th>
+                                                    <th>Type</th>
+                                                    <th>Floor</th>
+                                                    <th>Capacity</th>
+                                                    <th>Price</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="roomsTable">
+                                                <!-- Rooms will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Events Tab -->
+                        <div class="tab-pane fade" id="events">
+                            <div class="card">
+                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Event Space Management</h5>
+                                    <button class="btn btn-primary" onclick="showAddEventSpaceModal()">
+                                        <i class="fas fa-plus me-1"></i> Add Event Space
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Capacity</th>
+                                                    <th>Price</th>
+                                                    <th>Status</th>
+                                                    <th>Amenities</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="eventSpacesTable">
+                                                <!-- Event spaces will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bookings Tab -->
+                        <div class="tab-pane fade" id="bookings">
+                            <div class="card">
+                                <div class="card-header bg-transparent">
+                                    <h5 class="mb-0">Booking Management</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Booking ID</th>
+                                                    <th>Guest</th>
+                                                    <th>Type</th>
+                                                    <th>Check-in</th>
+                                                    <th>Check-out</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="bookingsTable">
+                                                <!-- Bookings will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" class="form-control" name="firstName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" name="lastName" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control" name="phone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" name="role" required>
+                                <option value="GUEST">Guest</option>
+                                <option value="ADMIN">Admin</option>
+                                <option value="MANAGER">Manager</option>
+                                <option value="FRONT_DESK">Front Desk</option>
+                                <option value="PAYMENT_OFFICER">Payment Officer</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addUser()">Add User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Room Modal -->
+    <div class="modal fade" id="addRoomModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Room</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRoomForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Room Number</label>
+                                    <input type="text" class="form-control" name="roomNumber" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Floor Number</label>
+                                    <input type="number" class="form-control" name="floorNumber" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Room Type</label>
+                            <select class="form-select" name="roomType" required>
+                                <option value="STANDARD">Standard</option>
+                                <option value="DELUXE">Deluxe</option>
+                                <option value="SUITE">Suite</option>
+                                <option value="PRESIDENTIAL">Presidential</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Capacity</label>
+                                    <input type="number" class="form-control" name="capacity" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Base Price</label>
+                                    <input type="number" class="form-control" name="basePrice" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amenities</label>
+                            <input type="text" class="form-control" name="amenities" placeholder="WiFi, AC, TV, etc.">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addRoom()">Add Room</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Event Space Modal -->
+    <div class="modal fade" id="addEventSpaceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Event Space</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEventSpaceForm">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Capacity</label>
+                                    <input type="number" class="form-control" name="capacity" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Base Price</label>
+                                    <input type="number" class="form-control" name="basePrice" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Setup Types</label>
+                            <input type="text" class="form-control" name="setupTypes" placeholder="Banquet, Theater, Conference">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amenities</label>
+                            <input type="text" class="form-control" name="amenities" placeholder="Audio/Visual, Catering, etc.">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Floor Number</label>
+                                    <input type="number" class="form-control" name="floorNumber" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Dimensions</label>
+                                    <input type="text" class="form-control" name="dimensions" placeholder="e.g., 20m x 15m">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addEventSpace()">Add Event Space</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Management Modal -->
+    <div class="modal fade" id="roomManagementModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Room Management</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="roomManagementTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#roomDetailsTab">Details</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#roomPhotosTab">Photos</a>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane fade show active" id="roomDetailsTab">
+                            <form id="roomUpdateForm">
+                                <input type="hidden" id="roomId" name="roomId">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Room Number</label>
+                                            <input type="text" class="form-control" id="roomNumber" name="roomNumber" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Room Type</label>
+                                            <input type="text" class="form-control" id="roomType" name="roomType" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Floor Number</label>
+                                            <input type="number" class="form-control" id="roomFloor" name="floorNumber">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Capacity</label>
+                                            <input type="number" class="form-control" id="roomCapacity" name="capacity" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Base Price</label>
+                                    <input type="number" class="form-control" id="roomPrice" name="basePrice" step="0.01" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" id="roomDescription" name="description" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Amenities</label>
+                                    <input type="text" class="form-control" id="roomAmenities" name="amenities">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" id="roomStatus" name="status">
+                                        <option value="AVAILABLE">Available</option>
+                                        <option value="OCCUPIED">Occupied</option>
+                                        <option value="MAINTENANCE">Maintenance</option>
+                                        <option value="BLOCKED">Blocked</option>
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="roomPhotosTab">
+                            <div class="mb-3">
+                                <label class="form-label">Upload Photos (Max 5)</label>
+                                <input type="file" class="form-control" id="roomPhotoUpload" accept="image/*" multiple>
+                                <small class="text-muted">You can upload up to 5 photos per room</small>
+                            </div>
+                            <div id="roomPhotosContainer" class="row">
+                                <!-- Photos will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateRoom()">Update Room</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Space Management Modal -->
+    <div class="modal fade" id="eventSpaceManagementModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Event Space Management</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="eventSpaceManagementTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#eventSpaceDetailsTab">Details</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#eventSpacePhotosTab">Photos</a>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane fade show active" id="eventSpaceDetailsTab">
+                            <form id="eventSpaceUpdateForm">
+                                <input type="hidden" id="eventSpaceId" name="eventSpaceId">
+                                <div class="mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="eventSpaceName" name="name" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Capacity</label>
+                                            <input type="number" class="form-control" id="eventSpaceCapacity" name="capacity" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Base Price</label>
+                                            <input type="number" class="form-control" id="eventSpacePrice" name="basePrice" step="0.01" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" id="eventSpaceDescription" name="description" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Setup Types</label>
+                                    <input type="text" class="form-control" id="eventSpaceSetupTypes" name="setupTypes">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Amenities</label>
+                                    <input type="text" class="form-control" id="eventSpaceAmenities" name="amenities">
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Floor Number</label>
+                                            <input type="number" class="form-control" id="eventSpaceFloor" name="floorNumber">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Dimensions</label>
+                                            <input type="text" class="form-control" id="eventSpaceDimensions" name="dimensions">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="cateringAvailable" name="cateringAvailable">
+                                            <label class="form-check-label" for="cateringAvailable">
+                                                Catering Available
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="audioVisualEquipment" name="audioVisualEquipment">
+                                            <label class="form-check-label" for="audioVisualEquipment">
+                                                Audio/Visual Equipment
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="parkingAvailable" name="parkingAvailable">
+                                            <label class="form-check-label" for="parkingAvailable">
+                                                Parking Available
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" id="eventSpaceStatus" name="status">
+                                        <option value="AVAILABLE">Available</option>
+                                        <option value="BOOKED">Booked</option>
+                                        <option value="MAINTENANCE">Maintenance</option>
+                                        <option value="BLOCKED">Blocked</option>
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="eventSpacePhotosTab">
+                            <div class="mb-3">
+                                <label class="form-label">Upload Photos (Max 5)</label>
+                                <input type="file" class="form-control" id="eventSpacePhotoUpload" accept="image/*" multiple>
+                                <small class="text-muted">You can upload up to 5 photos per event space</small>
+                            </div>
+                            <div id="eventSpacePhotosContainer" class="row">
+                                <!-- Photos will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="btn btn-primary" onclick="updateEventSpace()">Update Event Space</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Gallery Modal -->
+    <div class="modal fade" id="photoGalleryModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Photo Gallery</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="photoGalleryContainer">
+                        <!-- Photos will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html> 

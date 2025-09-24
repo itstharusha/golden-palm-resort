@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Palm Resort - Luxury Hotel & Event Venue</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #d4af37;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-gold: #f4e4bc;
+            --dark-gold: #b8860b;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(44, 62, 80, 0.95) !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        .hero-section {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+                        url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 120px 0;
+            text-align: center;
+        }
+        
+        .event-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .event-card img {
+            height: 200px;
+            object-fit: cover;
+            width: 100%;
+        }
+        
+        .event-card .card-body {
+            padding: 25px;
+        }
+        
+        .price-tag {
+            background: var(--primary-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .capacity-badge {
+            background: var(--secondary-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-right: 10px;
+        }
+        
+        .amenity-icon {
+            color: var(--primary-color);
+            margin-right: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: var(--dark-gold);
+            transform: translateY(-2px);
+        }
+        
+        .search-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: -50px 0 50px 0;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+        }
+        
+        .event-type-filter {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .filter-btn {
+            background: white;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .filter-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        
+        .modal-header {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        .stats-section {
+            background: var(--secondary-color);
+            color: white;
+            padding: 60px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-crown me-2"></i>
+                Golden Palm Resort
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Rooms</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Contact</a>
+                    </li>
+                    <li class="nav-item" id="authButtons">
+                        <a class="nav-link btn btn-outline-light me-2" href="login.html">Login</a>
+                        <a class="nav-link btn btn-primary" href="register.html">Register</a>
+                    </li>
+                    <li class="nav-item d-none" id="userMenu">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i><span id="userName">User</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-circle me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-calendar me-2"></i>My Bookings</a></li>
+                                <li class="d-none" id="adminMenu"><a class="dropdown-item" href="admin.html"><i class="fas fa-cog me-2"></i>Admin Dashboard</a></li>
+                                <li class="d-none" id="frontDeskMenu"><a class="dropdown-item" href="frontdesk.html"><i class="fas fa-concierge-bell me-2"></i>Front Desk</a></li>
+                                <li class="d-none" id="paymentOfficerMenu"><a class="dropdown-item" href="payment-officer.html"><i class="fas fa-credit-card me-2"></i>Payment Officer</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-4">Welcome to Golden Palm Resort</h1>
+            <p class="lead mb-5">Create unforgettable moments in our stunning venues and experience luxury like never before</p>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="search-section">
+                        <h3 class="text-center mb-4">Find Your Perfect Venue</h3>
+                        <form id="eventSearchForm">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Event Type</label>
+                                    <select class="form-select" id="eventType">
+                                        <option value="">All Events</option>
+                                        <option value="Wedding">Wedding</option>
+                                        <option value="Conference">Conference</option>
+                                        <option value="Corporate Event">Corporate Event</option>
+                                        <option value="Meeting">Meeting</option>
+                                        <option value="Banquet">Banquet</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Event Date</label>
+                                    <input type="date" class="form-control" id="eventDate" required>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Start Time</label>
+                                    <input type="time" class="form-control" id="startTime" required>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">End Time</label>
+                                    <input type="time" class="form-control" id="endTime" required>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Guests</label>
+                                    <input type="number" class="form-control" id="expectedGuests" min="1" max="1000" required>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-search me-2"></i>Search Venues
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Event Type Filters -->
+    <section class="container mt-5">
+        <div class="event-type-filter justify-content-center">
+            <button class="filter-btn active" data-type="">All Venues</button>
+            <button class="filter-btn" data-type="Wedding">Weddings</button>
+            <button class="filter-btn" data-type="Conference">Conferences</button>
+            <button class="filter-btn" data-type="Corporate Event">Corporate Events</button>
+            <button class="filter-btn" data-type="Meeting">Meetings</button>
+            <button class="filter-btn" data-type="Banquet">Banquets</button>
+        </div>
+    </section>
+
+    <!-- Event Spaces Container -->
+    <section class="container mt-5">
+        <div class="row" id="eventSpacesContainer">
+            <!-- Event spaces will be loaded here -->
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">5</div>
+                    <div>Unique Venues</div>
+                </div>
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">500+</div>
+                    <div>Max Capacity</div>
+                </div>
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">1000+</div>
+                    <div>Events Hosted</div>
+                </div>
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">5★</div>
+                    <div>Client Rating</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking Modal -->
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Book Event Space</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bookingForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Contact Person</label>
+                                <input type="text" class="form-control" id="contactPerson" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Contact Phone</label>
+                                <input type="tel" class="form-control" id="contactPhone" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contact Email</label>
+                            <input type="email" class="form-control" id="contactEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Setup Requirements</label>
+                            <textarea class="form-control" id="setupRequirements" rows="3" placeholder="Describe your setup requirements..."></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="cateringRequired">
+                                    <label class="form-check-label" for="cateringRequired">
+                                        Catering Required
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="audioVisualRequired">
+                                    <label class="form-check-label" for="audioVisualRequired">
+                                        Audio/Visual Equipment
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Special Requests</label>
+                            <textarea class="form-control" id="specialRequests" rows="3" placeholder="Any special requests or additional requirements..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmBooking()">Confirm Booking</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedEventSpace = null;
+        let allEventSpaces = [];
+
+        // Set minimum date for event date - must be in the FUTURE (server uses @Future)
+        const todayDate = new Date();
+        const tomorrow = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate() + 1)
+            .toISOString().split('T')[0];
+        document.getElementById('eventDate').min = tomorrow;
+
+        // Load event spaces on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEventSpaces();
+        });
+
+        // Handle event search form
+        document.getElementById('eventSearchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            searchAvailableEventSpaces();
+        });
+
+        // Handle filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                filterEventSpaces(this.dataset.type);
+            });
+        });
+
+        // Load all event spaces
+        async function loadEventSpaces() {
+            try {
+                const response = await fetch('/api/event-spaces');
+                allEventSpaces = await response.json();
+                displayEventSpaces(allEventSpaces);
+            } catch (error) {
+                console.error('Error loading event spaces:', error);
+                showAlert('Error loading event spaces. Please try again.', 'danger');
+            }
+        }
+
+        // Search available event spaces
+        async function searchAvailableEventSpaces() {
+            const eventDate = document.getElementById('eventDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const expectedGuests = document.getElementById('expectedGuests').value;
+
+            if (!eventDate || !startTime || !endTime || !expectedGuests) {
+                showAlert('Please fill in all required fields.', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/event-bookings/available-event-spaces?eventDate=${eventDate}&startTime=${startTime}&endTime=${endTime}&expectedGuests=${expectedGuests}`);
+                const eventSpaces = await response.json();
+                displayEventSpaces(eventSpaces);
+
+                if (eventSpaces.length === 0) {
+                    showAlert('No event spaces available for the selected criteria.', 'info');
+                } else {
+                    showAlert(`Found ${eventSpaces.length} available venue(s)!`, 'success');
+                }
+            } catch (error) {
+                console.error('Error searching event spaces:', error);
+                showAlert('Error searching for event spaces. Please try again.', 'danger');
+            }
+        }
+
+        // Filter event spaces by type
+        function filterEventSpaces(eventType) {
+            if (!eventType) {
+                displayEventSpaces(allEventSpaces);
+                return;
+            }
+
+            const filtered = allEventSpaces.filter(space => 
+                space.setupTypes && space.setupTypes.includes(eventType)
+            );
+            displayEventSpaces(filtered);
+        }
+
+        // Display event spaces
+        async function displayEventSpaces(eventSpaces) {
+            const container = document.getElementById('eventSpacesContainer');
+            container.innerHTML = '';
+
+            for (const space of eventSpaces) {
+                // Load photos for this event space
+                let photos = [];
+                try {
+                    const photosResponse = await fetch(`/api/photos/event-spaces/${space.id}`);
+                    if (photosResponse.ok) {
+                        photos = await photosResponse.json();
+                    }
+                } catch (error) {
+                    console.error('Error loading event space photos:', error);
+                }
+
+                const defaultImage = "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80";
+                const spaceImage = photos.length > 0 ? photos[0].downloadUrl : defaultImage;
+                const photoCount = photos.length;
+
+                const eventCard = `
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="event-card">
+                            <div class="position-relative">
+                                <img src="${spaceImage}" alt="${space.name}" style="height: 250px; object-fit: cover;">
+                                ${photoCount > 0 ? `
+                                    <div class="position-absolute top-0 end-0 m-2">
+                                        <span class="badge bg-primary">${photoCount} photos</span>
+                                    </div>
+                                    <div class="position-absolute bottom-0 start-0 m-2">
+                                        <button class="btn btn-sm btn-light" onclick="viewEventSpacePhotos(${space.id}, '${space.name}')">
+                                            <i class="fas fa-images"></i> View Photos
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h5 class="card-title">${space.name}</h5>
+                                    <span class="price-tag">LKR ${space.basePrice.toLocaleString()}</span>
+                                </div>
+                                <p class="card-text">${space.description}</p>
+                                
+                                <div class="mb-3">
+                                    <span class="capacity-badge">
+                                        <i class="fas fa-users me-1"></i>${space.capacity} guests
+                                    </span>
+                                    <span class="capacity-badge">
+                                        <i class="fas fa-ruler-combined me-1"></i>${space.dimensions}
+                                    </span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-tag amenity-icon"></i>${space.setupTypes}
+                                    </small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    ${space.cateringAvailable ? '<span class="badge bg-success me-1"><i class="fas fa-utensils"></i> Catering</span>' : ''}
+                                    ${space.audioVisualEquipment ? '<span class="badge bg-info me-1"><i class="fas fa-tv"></i> A/V Equipment</span>' : ''}
+                                    ${space.parkingAvailable ? '<span class="badge bg-warning me-1"><i class="fas fa-parking"></i> Parking</span>' : ''}
+                                </div>
+                                
+                                <button class="btn btn-primary w-100" onclick="bookEventSpace(${space.id})">
+                                    Book This Venue
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += eventCard;
+            }
+        }
+
+        // Book an event space
+        function bookEventSpace(eventSpaceId) {
+            const eventDate = document.getElementById('eventDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const expectedGuests = document.getElementById('expectedGuests').value;
+
+            if (!eventDate || !startTime || !endTime || !expectedGuests) {
+                showAlert('Please fill in the search form first to set event details.', 'warning');
+                return;
+            }
+
+            selectedEventSpace = eventSpaceId;
+            const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
+            modal.show();
+        }
+
+        // Confirm booking
+        async function confirmBooking() {
+            const eventDate = document.getElementById('eventDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const expectedGuests = document.getElementById('expectedGuests').value;
+            const contactPerson = document.getElementById('contactPerson').value;
+            const contactPhone = document.getElementById('contactPhone').value;
+            const contactEmail = document.getElementById('contactEmail').value;
+            const setupRequirements = document.getElementById('setupRequirements').value;
+            const cateringRequired = document.getElementById('cateringRequired').checked;
+            const audioVisualRequired = document.getElementById('audioVisualRequired').checked;
+            const specialRequests = document.getElementById('specialRequests').value;
+
+            // Client-side validations to match backend constraints
+            if (!contactPerson || !contactPhone) {
+                showAlert('Please fill in all required contact information.', 'warning');
+                return;
+            }
+            if (!eventDate) {
+                showAlert('Please select an event date.', 'warning');
+                return;
+            }
+            const selected = new Date(eventDate);
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            if (selected <= startOfToday) {
+                showAlert('Event date must be in the future (tomorrow or later).', 'warning');
+                return;
+            }
+            if (!startTime || !endTime) {
+                showAlert('Please provide both start and end times.', 'warning');
+                return;
+            }
+            if (endTime <= startTime) {
+                showAlert('End time must be after start time.', 'warning');
+                return;
+            }
+            const guestsNum = parseInt(expectedGuests, 10);
+            if (!guestsNum || guestsNum < 1 || guestsNum > 1000) {
+                showAlert('Expected guests must be between 1 and 1000.', 'warning');
+                return;
+            }
+
+            const bookingData = {
+                eventSpaceId: selectedEventSpace,
+                eventType: document.getElementById('eventType').value || 'Event',
+                eventDate: eventDate,
+                startTime: startTime,
+                endTime: endTime,
+                expectedGuests: guestsNum,
+                contactPerson: contactPerson,
+                contactPhone: contactPhone,
+                contactEmail: contactEmail,
+                setupRequirements: setupRequirements,
+                cateringRequired: cateringRequired,
+                audioVisualRequired: audioVisualRequired,
+                specialRequests: specialRequests
+            };
+
+            try {
+                // Require login and attach JWT
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    showAlert('Please login to book an event.', 'warning');
+                    return;
+                }
+                const response = await fetch('/api/event-bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+
+                if (response.ok) {
+                    const booking = await response.json();
+                    // Redirect to payment page for event booking
+                    const amount = booking.totalAmount || 0;
+                    window.location.href = `/payment.html?type=event&ref=${encodeURIComponent(booking.bookingReference)}&amount=${encodeURIComponent(amount)}`;
+                } else {
+                    const text = await response.text();
+                    showAlert('Booking failed. ' + (text || 'Please check your inputs and try again.'), 'danger');
+                }
+            } catch (error) {
+                console.error('Error creating booking:', error);
+                showAlert('Error creating booking. Please try again.', 'danger');
+            }
+        }
+
+        // Show alert messages
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Photo viewing functions
+        async function viewEventSpacePhotos(eventSpaceId, eventSpaceName) {
+            try {
+                const response = await fetch(`/api/photos/event-spaces/${eventSpaceId}`);
+                if (response.ok) {
+                    const photos = await response.json();
+                    showPhotoGallery(photos, `${eventSpaceName} Photos`);
+                } else {
+                    showAlert('No photos available for this venue', 'info');
+                }
+            } catch (error) {
+                console.error('Error loading event space photos:', error);
+                showAlert('Error loading photos', 'danger');
+            }
+        }
+
+        function showPhotoGallery(photos, title) {
+            const container = document.getElementById('photoGalleryContainer');
+            const titleElement = document.getElementById('photoGalleryTitle');
+            
+            container.innerHTML = '';
+            titleElement.textContent = title;
+            
+            photos.forEach((photo, index) => {
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'col-md-6 col-lg-4 mb-3';
+                photoDiv.innerHTML = `
+                    <div class="card">
+                        <img src="${photo.downloadUrl}" class="card-img-top" alt="Photo ${index + 1}" 
+                             style="height: 250px; object-fit: cover; cursor: pointer;" 
+                             onclick="openPhotoViewer('${photo.downloadUrl}', '${photo.originalFileName}')">
+                        <div class="card-body">
+                            <p class="card-text small">${photo.originalFileName}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(photoDiv);
+            });
+            
+            new bootstrap.Modal(document.getElementById('photoGalleryModal')).show();
+        }
+
+        function openPhotoViewer(imageUrl, fileName) {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${fileName}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="${imageUrl}" class="img-fluid" alt="${fileName}">
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            new bootstrap.Modal(modal).show();
+            
+            modal.addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(modal);
+            });
+        }
+
+        // Authentication state management
+        function checkAuthState() {
+            const token = localStorage.getItem('authToken');
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const authButtons = document.getElementById('authButtons');
+            const userMenu = document.getElementById('userMenu');
+            const userName = document.getElementById('userName');
+            const adminMenu = document.getElementById('adminMenu');
+            const frontDeskMenu = document.getElementById('frontDeskMenu');
+            const paymentOfficerMenu = document.getElementById('paymentOfficerMenu');
+
+            if (token && userInfo.username) {
+                // User is logged in
+                authButtons.classList.add('d-none');
+                userMenu.classList.remove('d-none');
+                userName.textContent = userInfo.fullName || userInfo.username;
+                
+                // Show role-specific menu items
+                if (userInfo.role === 'ADMIN') {
+                    adminMenu.classList.remove('d-none');
+                }
+                if (userInfo.role === 'FRONT_DESK' || userInfo.role === 'ADMIN') {
+                    frontDeskMenu.classList.remove('d-none');
+                }
+                if (userInfo.role === 'PAYMENT_OFFICER' || userInfo.role === 'ADMIN') {
+                    paymentOfficerMenu.classList.remove('d-none');
+                }
+            } else {
+                // User is not logged in
+                authButtons.classList.remove('d-none');
+                userMenu.classList.add('d-none');
+                adminMenu.classList.add('d-none');
+                frontDeskMenu.classList.add('d-none');
+                paymentOfficerMenu.classList.add('d-none');
+            }
+        }
+
+        // Logout function
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            checkAuthState();
+            showAlert('Logged out successfully', 'success');
+        });
+
+        // Check auth state on page load
+        window.addEventListener('load', checkAuthState);
+    </script>
+
+    <!-- Photo Gallery Modal -->
+    <div class="modal fade" id="photoGalleryModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="photoGalleryTitle">Photo Gallery</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="photoGalleryContainer" class="row">
+                        <!-- Photos will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
