@@ -7,33 +7,206 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@300;400;500;600;700&display=swap');
+        
         :root {
-            --primary-color: #d4af37;
-            --secondary-color: #2c3e50;
-            --accent-color: #e74c3c;
-            --light-gold: #f4e4bc;
-            --dark-gold: #b8860b;
+            --primary-color: #AE998A;
+            --secondary-color: #26201F;
+            --accent-color: #0C090A;
+            --light-bg: #FDFDFD;
+            --dark-bg: #26201F;
+            --text-light: #FDFDFD;
+            --text-muted: #AE998A;
+            --border-color: #AE998A;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: 'Nunito', sans-serif;
+            line-height: 1.7;
+            color: var(--text-light);
+            background-color: var(--dark-bg);
+            scroll-behavior: smooth;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            line-height: 1.3;
         }
         
         .navbar {
-            background: rgba(44, 62, 80, 0.95) !important;
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .navbar-brand {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: white !important;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-brand:hover {
+            color: rgba(255, 255, 255, 0.8) !important;
+            transform: scale(1.02);
+        }
+        
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-weight: 400;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin: 0 1.5rem;
+            padding: 0.5rem 0 !important;
+            transition: all 0.3s ease;
+            position: relative;
+            text-transform: uppercase;
+        }
+        
+        .navbar-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: white;
+            transition: width 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link:hover::after,
+        .navbar-nav .nav-link.active::after {
+            width: 100%;
+        }
+        
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link.active {
+            color: white !important;
         }
         
         .hero-section {
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
-                        url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), 
+                        url('https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.1.0');
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            padding: 120px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(174, 153, 138, 0.1), rgba(38, 32, 31, 0.2));
+            z-index: 1;
+        }
+        
+        .hero-content {
             text-align: center;
+            z-index: 2;
+            position: relative;
+            max-width: 800px;
+            padding: 0 2rem;
+        }
+        
+        .hero-content h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            font-style: italic;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1.2s ease-out 0.3s forwards;
+        }
+        
+        .hero-content .subtitle {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 3rem;
+            line-height: 1.2;
+            letter-spacing: 0px;
+            opacity: 0;
+            font-style: italic;
+            transform: translateY(50px);
+            animation: fadeInUp 1.2s ease-out 0.6s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .book-now-btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 18px 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1.2s ease-out 0.9s forwards;
+        }
+        
+        .book-now-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+        
+        .book-now-btn:hover::before {
+            left: 100%;
+        }
+        
+        .book-now-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
         }
         
         .event-card {
@@ -190,9 +363,8 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-crown me-2"></i>
-                Golden Palm Resort
+            <a class="navbar-brand" href="/index.html">
+                <i class="fas fa-palm-tree me-2"></i>Golden Palm Resort
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -200,16 +372,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/">Home</a>
+                        <a class="nav-link" href="/index.html">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/index.html">Rooms</a>
+                        <a class="nav-link" href="/index.html#rooms">Rooms</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
+                        <a class="nav-link active" href="/events.html">Events</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#contact">Contact</a>
+                        <a class="nav-link" href="/index.html#contact">Contact</a>
                     </li>
                     <li class="nav-item" id="authButtons">
                         <a class="nav-link btn btn-outline-light me-2" href="login.html">Login</a>
@@ -238,9 +410,16 @@
 
     <!-- Hero Section -->
     <section class="hero-section">
+        <div class="hero-content">
+            <h1>Perfect spaces,</h1>
+            <div class="subtitle">perfect memories</div>
+            <button class="book-now-btn" onclick="scrollToSearch()">Book Now</button>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section id="search" class="py-5" style="background-color: var(--dark-bg);">
         <div class="container">
-            <h1 class="display-4 fw-bold mb-4">Welcome to Golden Palm Resort</h1>
-            <p class="lead mb-5">Create unforgettable moments in our stunning venues and experience luxury like never before</p>
             <div class="row justify-content-center">
                 <div class="col-md-8">
                     <div class="search-section">
@@ -395,6 +574,24 @@
         let selectedEventSpace = null;
         let allEventSpaces = [];
 
+        // Smooth scroll to search section
+        function scrollToSearch() {
+            document.getElementById('search').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        // Parallax effect
+        window.addEventListener('scroll', function() {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.hero-section');
+            const speed = scrolled * 0.5;
+            if (parallax) {
+                parallax.style.transform = `translateY(${speed}px)`;
+            }
+        });
+
         // Set minimum date for event date - must be in the FUTURE (server uses @Future)
         const todayDate = new Date();
         const tomorrow = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate() + 1)
@@ -420,6 +617,63 @@
                 filterEventSpaces(this.dataset.type);
             });
         });
+
+        // Get event space image based on name and description
+        function getEventSpaceImage(name, description) {
+            const eventSpaceImages = {
+                // Conference and meeting spaces
+                'Conference Hall': 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                'Meeting Room': 'https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                'Boardroom': 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                
+                // Wedding and celebration spaces
+                'Wedding Hall': 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                'Banquet Hall': 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                'Grand Ballroom': 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                
+                // Outdoor spaces
+                'Garden Pavilion': 'https://images.unsplash.com/photo-1464207687429-7505649dae38?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                'Poolside Deck': 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                'Rooftop Terrace': 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                
+                // Entertainment spaces
+                'Theater': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                'Auditorium': 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'
+            };
+            
+            // Check for exact name match first
+            if (eventSpaceImages[name]) {
+                return eventSpaceImages[name];
+            }
+            
+            // Check for keywords in name or description
+            const text = (name + ' ' + (description || '')).toLowerCase();
+            
+            if (text.includes('wedding') || text.includes('bridal')) {
+                return eventSpaceImages['Wedding Hall'];
+            } else if (text.includes('conference') || text.includes('business')) {
+                return eventSpaceImages['Conference Hall'];
+            } else if (text.includes('meeting') || text.includes('corporate')) {
+                return eventSpaceImages['Meeting Room'];
+            } else if (text.includes('banquet') || text.includes('dining')) {
+                return eventSpaceImages['Banquet Hall'];
+            } else if (text.includes('ballroom') || text.includes('grand')) {
+                return eventSpaceImages['Grand Ballroom'];
+            } else if (text.includes('garden') || text.includes('outdoor')) {
+                return eventSpaceImages['Garden Pavilion'];
+            } else if (text.includes('pool') || text.includes('deck')) {
+                return eventSpaceImages['Poolside Deck'];
+            } else if (text.includes('rooftop') || text.includes('terrace')) {
+                return eventSpaceImages['Rooftop Terrace'];
+            } else if (text.includes('theater') || text.includes('performance')) {
+                return eventSpaceImages['Theater'];
+            } else if (text.includes('auditorium') || text.includes('presentation')) {
+                return eventSpaceImages['Auditorium'];
+            }
+            
+            // Default to conference hall if no match
+            return eventSpaceImages['Conference Hall'];
+        }
 
         // Load all event spaces
         async function loadEventSpaces() {
@@ -491,25 +745,25 @@
                     console.error('Error loading event space photos:', error);
                 }
 
-                const defaultImage = "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80";
+                const defaultImage = getEventSpaceImage(space.name, space.description);
                 const spaceImage = photos.length > 0 ? photos[0].downloadUrl : defaultImage;
                 const photoCount = photos.length;
 
                 const eventCard = `
                     <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="event-card">
+                        <div class="event-card" style="cursor: pointer;" onclick="showEventSpaceDetails(${space.id})">
                             <div class="position-relative">
                                 <img src="${spaceImage}" alt="${space.name}" style="height: 250px; object-fit: cover;">
                                 ${photoCount > 0 ? `
                                     <div class="position-absolute top-0 end-0 m-2">
                                         <span class="badge bg-primary">${photoCount} photos</span>
                                     </div>
-                                    <div class="position-absolute bottom-0 start-0 m-2">
-                                        <button class="btn btn-sm btn-light" onclick="viewEventSpacePhotos(${space.id}, '${space.name}')">
-                                            <i class="fas fa-images"></i> View Photos
-                                        </button>
-                                    </div>
                                 ` : ''}
+                                <div class="position-absolute bottom-0 end-0 m-2">
+                                    <span class="badge bg-dark bg-opacity-75">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </span>
+                                </div>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
@@ -538,10 +792,6 @@
                                     ${space.audioVisualEquipment ? '<span class="badge bg-info me-1"><i class="fas fa-tv"></i> A/V Equipment</span>' : ''}
                                     ${space.parkingAvailable ? '<span class="badge bg-warning me-1"><i class="fas fa-parking"></i> Parking</span>' : ''}
                                 </div>
-                                
-                                <button class="btn btn-primary w-100" onclick="bookEventSpace(${space.id})">
-                                    Book This Venue
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -550,8 +800,90 @@
             }
         }
 
-        // Book an event space
-        function bookEventSpace(eventSpaceId) {
+        // Show event space details in modal
+        async function showEventSpaceDetails(eventSpaceId) {
+            try {
+                // Fetch event space details
+                const response = await fetch(`/api/event-spaces/${eventSpaceId}`);
+                if (!response.ok) {
+                    throw new Error('Event space not found');
+                }
+                const eventSpace = await response.json();
+                
+                // Load photos from database
+                let photos = [];
+                try {
+                    const photosResponse = await fetch(`/api/photos/event-spaces/${eventSpace.id}`);
+                    if (photosResponse.ok) {
+                        const dbPhotos = await photosResponse.json();
+                        photos = dbPhotos.map(photo => ({ 
+                            downloadUrl: `/api/photos/${photo.id}/download` 
+                        }));
+                    }
+                } catch (error) {
+                    console.error('Error loading event space photos:', error);
+                }
+                
+                // If no photos, use default images
+                if (photos.length === 0) {
+                    const defaultImage = getEventSpaceImage(eventSpace.name, eventSpace.description);
+                    photos = [{ downloadUrl: defaultImage }];
+                }
+                
+                // Populate modal with event space data
+                document.getElementById('eventSpaceModalTitle').textContent = eventSpace.name;
+                document.getElementById('eventSpaceModalDescription').textContent = eventSpace.description || 'Professional event space with modern facilities.';
+                document.getElementById('eventSpaceModalAmenities').textContent = eventSpace.amenities || 'Audio/Visual Equipment, WiFi, Climate Control, Professional Lighting';
+                document.getElementById('eventSpaceModalSetupTypes').textContent = eventSpace.setupTypes || 'Theater, Banquet, Conference, Wedding';
+                document.getElementById('eventSpaceModalCapacity').textContent = `${eventSpace.capacity} guests`;
+                document.getElementById('eventSpaceModalDimensions').textContent = eventSpace.dimensions || 'Contact for details';
+                document.getElementById('eventSpaceModalPrice').textContent = eventSpace.basePrice.toLocaleString();
+                document.getElementById('eventSpaceModalName').textContent = eventSpace.name;
+                
+                // Set up image carousel
+                const carouselInner = document.getElementById('eventSpaceCarouselInner');
+                const carouselIndicators = document.getElementById('eventSpaceCarouselIndicators');
+                
+                carouselInner.innerHTML = '';
+                carouselIndicators.innerHTML = '';
+                
+                photos.forEach((photo, index) => {
+                    // Add carousel item
+                    const carouselItem = document.createElement('div');
+                    carouselItem.className = `carousel-item ${index === 0 ? 'active' : ''}`;
+                    carouselItem.innerHTML = `<img src="${photo.downloadUrl}" class="d-block w-100" alt="Event Space Image ${index + 1}" style="height: 300px; object-fit: cover;">`;
+                    carouselInner.appendChild(carouselItem);
+                    
+                    // Add indicator
+                    const indicator = document.createElement('button');
+                    indicator.type = 'button';
+                    indicator.setAttribute('data-bs-target', '#eventSpaceImageCarousel');
+                    indicator.setAttribute('data-bs-slide-to', index.toString());
+                    if (index === 0) indicator.className = 'active';
+                    carouselIndicators.appendChild(indicator);
+                });
+                
+                // Store event space ID for booking
+                window.currentEventSpaceId = eventSpaceId;
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('eventSpaceDetailsModal')).show();
+                
+            } catch (error) {
+                console.error('Error loading event space details:', error);
+                showAlert('Error loading event space details. Please try again.', 'danger');
+            }
+        }
+
+        // Book an event space from modal
+        function bookEventSpace() {
+            if (window.currentEventSpaceId) {
+                bookEventSpaceById(window.currentEventSpaceId);
+            }
+        }
+
+        // Book an event space by ID
+        function bookEventSpaceById(eventSpaceId) {
             const eventDate = document.getElementById('eventDate').value;
             const startTime = document.getElementById('startTime').value;
             const endTime = document.getElementById('endTime').value;
@@ -805,6 +1137,71 @@
                 <div class="modal-body">
                     <div id="photoGalleryContainer" class="row">
                         <!-- Photos will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Space Details Modal -->
+    <div class="modal fade" id="eventSpaceDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventSpaceModalTitle">Event Space Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Image Slideshow -->
+                    <div id="eventSpaceImageCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                        <div class="carousel-inner" id="eventSpaceCarouselInner">
+                            <!-- Images will be loaded here -->
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#eventSpaceImageCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#eventSpaceImageCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                        <div class="carousel-indicators" id="eventSpaceCarouselIndicators">
+                            <!-- Indicators will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Event Space Details -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Description</h6>
+                            <p id="eventSpaceModalDescription">Event space description will appear here...</p>
+                            
+                            <h6>Amenities</h6>
+                            <p id="eventSpaceModalAmenities">Event space amenities will appear here...</p>
+                            
+                            <h6>Setup Types</h6>
+                            <p id="eventSpaceModalSetupTypes">Available setup configurations...</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Capacity</h6>
+                                    <p id="eventSpaceModalCapacity">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Dimensions</h6>
+                                    <p id="eventSpaceModalDimensions">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">$<span id="eventSpaceModalPrice">0</span>/day</h5>
+                                    <p class="text-muted" id="eventSpaceModalName">Event Space</p>
+                                    <button class="btn btn-primary btn-lg w-100" onclick="bookEventSpace()">
+                                        <i class="fas fa-calendar-check"></i> Book Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

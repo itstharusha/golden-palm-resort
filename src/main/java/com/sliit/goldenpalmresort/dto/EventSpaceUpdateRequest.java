@@ -45,6 +45,8 @@ public class EventSpaceUpdateRequest {
     
     private String status;
     
+    private String imageUrls;
+    
     // Getters and Setters
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -81,4 +83,7 @@ public class EventSpaceUpdateRequest {
     
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-} 
+    
+    public String getImageUrls() { return imageUrls; }
+    public void setImageUrls(String imageUrls) { this.imageUrls = imageUrls; }
+}

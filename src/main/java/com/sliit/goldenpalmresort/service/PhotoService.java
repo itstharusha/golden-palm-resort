@@ -171,7 +171,6 @@ public class PhotoService {
         response.setId(photo.getId());
         response.setFileName(photo.getFileName());
         response.setOriginalFileName(photo.getOriginalFileName());
-        response.setContentType(photo.getContentType());
         response.setFileSize(photo.getFileSize());
         response.setFilePath(photo.getFilePath());
         response.setDisplayOrder(photo.getDisplayOrder());
@@ -180,4 +179,81 @@ public class PhotoService {
         response.setDownloadUrl("/api/photos/" + photo.getId() + "/download");
         return response;
     }
-} 
+    
+    // New methods for database storage
+    public Photo uploadRoomPhotoToDatabase(Long roomId, MultipartFile file, String uploadedBy) throws IOException {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+        
+        // Validate file
+        if (file.isEmpty()) {
+            throw new RuntimeException("File is empty");
+        }
+        
+        // Check max photos limit
+        long photoCount = photoRepository.findByRoomIdOrderByDisplayOrder(roomId).size();
+        if (photoCount >= maxPhotosPerItem) {
+            throw new RuntimeException("Maximum " + maxPhotosPerItem + " photos allowed per room");
+        }
+        
+        // Create photo entity
+        Photo photo = new Photo();
+        photo.setFileName(UUID.randomUUID().toString() + "_" + file.getOriginalFilename());
+        photo.setOriginalFileName(file.getOriginalFilename());
+        photo.setContentType(file.getContentType());
+        photo.setFileSize(file.getSize());
+        photo.setFilePath("temp"); // Will be updated after save with actual ID
+        photo.setPhotoData(file.getBytes()); // Store in database
+        photo.setDisplayOrder((int) photoCount + 1);
+        photo.setRoom(room);
+        photo.setIsActive(true);
+        photo.setUploadedBy(uploadedBy);
+        photo.setUploadedAt(LocalDateTime.now());
+        
+        photo = photoRepository.save(photo);
+        
+        // Update file path with actual ID
+        photo.setFilePath("/api/photos/" + photo.getId() + "/download");
+        return photoRepository.save(photo);
+    }
+    
+    public Photo uploadEventSpacePhotoToDatabase(Long eventSpaceId, MultipartFile file, String uploadedBy) throws IOException {
+        EventSpace eventSpace = eventSpaceRepository.findById(eventSpaceId)
+                .orElseThrow(() -> new RuntimeException("Event space not found"));
+        
+        // Validate file
+        if (file.isEmpty()) {
+            throw new RuntimeException("File is empty");
+        }
+        
+        // Check max photos limit
+        long photoCount = photoRepository.findByEventSpaceIdOrderByDisplayOrder(eventSpaceId).size();
+        if (photoCount >= maxPhotosPerItem) {
+            throw new RuntimeException("Maximum " + maxPhotosPerItem + " photos allowed per event space");
+        }
+        
+        // Create photo entity
+        Photo photo = new Photo();
+        photo.setFileName(UUID.randomUUID().toString() + "_" + file.getOriginalFilename());
+        photo.setOriginalFileName(file.getOriginalFilename());
+        photo.setContentType(file.getContentType());
+        photo.setFileSize(file.getSize());
+        photo.setFilePath("temp"); // Will be updated after save with actual ID
+        photo.setPhotoData(file.getBytes()); // Store in database
+        photo.setDisplayOrder((int) photoCount + 1);
+        photo.setEventSpace(eventSpace);
+        photo.setIsActive(true);
+        photo.setUploadedBy(uploadedBy);
+        photo.setUploadedAt(LocalDateTime.now());
+        
+        photo = photoRepository.save(photo);
+        
+        // Update file path with actual ID
+        photo.setFilePath("/api/photos/" + photo.getId() + "/download");
+        return photoRepository.save(photo);
+    }
+    
+    public Photo getPhotoById(Long photoId) {
+        return photoRepository.findById(photoId).orElse(null);
+    }
+}

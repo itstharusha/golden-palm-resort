@@ -28,7 +28,6 @@ public class RoomUpdateRequest {
     @Positive(message = "Base price must be positive")
     private BigDecimal basePrice;
     
-    @NotNull(message = "Capacity is required")
     @Positive(message = "Capacity must be positive")
     private Integer capacity;
     
@@ -37,6 +36,8 @@ public class RoomUpdateRequest {
     private String amenities;
     
     private String status;
+    
+    private String imageUrls;
     
     // Getters and Setters
     public String getRoomNumber() { return roomNumber; }
@@ -62,4 +63,7 @@ public class RoomUpdateRequest {
     
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-} 
+    
+    public String getImageUrls() { return imageUrls; }
+    public void setImageUrls(String imageUrls) { this.imageUrls = imageUrls; }
+}

@@ -5,24 +5,30 @@ import com.sliit.goldenpalmresort.dto.RoomUpdateRequest;
 import com.sliit.goldenpalmresort.dto.EventSpaceUpdateRequest;
 import com.sliit.goldenpalmresort.model.Booking;
 import com.sliit.goldenpalmresort.model.EventSpace;
+import com.sliit.goldenpalmresort.model.EventBooking;
 import com.sliit.goldenpalmresort.model.Room;
 import com.sliit.goldenpalmresort.model.User;
 import com.sliit.goldenpalmresort.repository.BookingRepository;
 import com.sliit.goldenpalmresort.repository.EventSpaceRepository;
+import com.sliit.goldenpalmresort.repository.EventBookingRepository;
 import com.sliit.goldenpalmresort.repository.RoomRepository;
 import com.sliit.goldenpalmresort.repository.UserRepository;
+import com.sliit.goldenpalmresort.repository.PaymentRepository;
 import com.sliit.goldenpalmresort.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -39,6 +45,9 @@ public class AdminController {
     private EventSpaceRepository eventSpaceRepository;
 
     @Autowired
+    private EventBookingRepository eventBookingRepository;
+
+    @Autowired
     private BookingRepository bookingRepository;
 
     @Autowired
@@ -46,6 +55,9 @@ public class AdminController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     // Get all users
     @GetMapping("/users")
@@ -55,6 +67,22 @@ public class AdminController {
             return ResponseEntity.ok(users);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Get single user by ID
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<?> getUserById(@PathVariable Long userId) {
+        try {
+            Optional<User> userOpt = userRepository.findById(userId);
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
+            }
+            
+            return ResponseEntity.ok(userOpt.get());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("message", "Error retrieving user: " + e.getMessage()));
         }
     }
 
@@ -119,6 +147,56 @@ public class AdminController {
                 }
             }
 
+            // Update user
+            @PutMapping("/users/{userId}")
+            public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody Map<String, Object> userData) {
+                try {
+                    Optional<User> userOpt = userRepository.findById(userId);
+                    
+                    if (userOpt.isEmpty()) {
+                        return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
+                    }
+
+                    User user = userOpt.get();
+                    
+                    // Update basic fields
+                    if (userData.containsKey("firstName")) {
+                        user.setFirstName((String) userData.get("firstName"));
+                    }
+                    if (userData.containsKey("lastName")) {
+                        user.setLastName((String) userData.get("lastName"));
+                    }
+                    if (userData.containsKey("username")) {
+                        user.setUsername((String) userData.get("username"));
+                    }
+                    if (userData.containsKey("email")) {
+                        user.setEmail((String) userData.get("email"));
+                    }
+                    if (userData.containsKey("phone")) {
+                        user.setPhone((String) userData.get("phone"));
+                    }
+                    if (userData.containsKey("role")) {
+                        user.setRole(User.UserRole.valueOf((String) userData.get("role")));
+                    }
+                    if (userData.containsKey("isActive")) {
+                        user.setActive((Boolean) userData.get("isActive"));
+                    }
+                    
+                    // Update password only if provided
+                    if (userData.containsKey("password") && userData.get("password") != null && 
+                        !((String) userData.get("password")).trim().isEmpty()) {
+                        String password = (String) userData.get("password");
+                        user.setPassword(passwordEncoder.encode(password));
+                    }
+                    
+                    user = userRepository.save(user);
+                    
+                    return ResponseEntity.ok(Map.of("message", "User updated successfully"));
+                } catch (Exception e) {
+                    return ResponseEntity.internalServerError().body(Map.of("message", "Error updating user: " + e.getMessage()));
+                }
+            }
+
             // Delete user
             @DeleteMapping("/users/{userId}")
             public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
@@ -169,8 +247,8 @@ public class AdminController {
             long activeBookings = bookingRepository.findByStatus(Booking.BookingStatus.CONFIRMED).size();
             stats.put("activeBookings", activeBookings);
             
-            // Monthly revenue (placeholder calculation)
-            BigDecimal monthlyRevenue = BigDecimal.valueOf(15420.00);
+            // Monthly revenue from actual payments
+            BigDecimal monthlyRevenue = calculateMonthlyRevenue();
             stats.put("monthlyRevenue", monthlyRevenue);
             
             return ResponseEntity.ok(stats);
@@ -183,25 +261,55 @@ public class AdminController {
     @GetMapping("/recent-bookings")
     public ResponseEntity<List<Map<String, Object>>> getRecentBookings() {
         try {
-            List<Booking> recentBookings = bookingRepository.findAll().stream()
-                    .limit(5)
-                    .toList();
-
-            List<Map<String, Object>> bookingsData = recentBookings.stream()
+            List<Map<String, Object>> roomBookings = bookingRepository.findAll().stream()
                     .map(booking -> {
-                        Map<String, Object> bookingData = new HashMap<>();
-                        bookingData.put("bookingReference", booking.getBookingReference());
-                        bookingData.put("guestName", booking.getUser().getFirstName() + " " + booking.getUser().getLastName());
-                        bookingData.put("type", "Room");
-                        bookingData.put("checkInDate", booking.getCheckInDate().toString());
-                        bookingData.put("checkOutDate", booking.getCheckOutDate().toString());
-                        bookingData.put("status", booking.getStatus().name());
-                        bookingData.put("totalAmount", booking.getTotalAmount());
-                        return bookingData;
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("bookingReference", booking.getBookingReference());
+                        m.put("guestName", booking.getUser().getFirstName() + " " + booking.getUser().getLastName());
+                        m.put("type", "Room");
+                        m.put("checkInDate", booking.getCheckInDate().toString());
+                        m.put("checkOutDate", booking.getCheckOutDate().toString());
+                        m.put("status", booking.getStatus().name());
+                        m.put("totalAmount", booking.getTotalAmount());
+                        m.put("createdAt", booking.getCreatedAt());
+                        return m;
                     })
                     .toList();
 
-            return ResponseEntity.ok(bookingsData);
+            List<Map<String, Object>> eventBookings = eventBookingRepository.findAll().stream()
+                    .map(ev -> {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("bookingReference", ev.getBookingReference());
+                        m.put("guestName", ev.getUser().getFirstName() + " " + ev.getUser().getLastName());
+                        m.put("type", "Event");
+                        m.put("checkInDate", ev.getEventDate().toString());
+                        m.put("checkOutDate", ev.getEventDate().toString());
+                        m.put("status", ev.getStatus().name());
+                        m.put("totalAmount", ev.getTotalAmount());
+                        m.put("createdAt", ev.getCreatedAt());
+                        return m;
+                    })
+                    .toList();
+
+            List<Map<String, Object>> combined = new ArrayList<>();
+            combined.addAll(roomBookings);
+            combined.addAll(eventBookings);
+
+            combined.sort((a,b) -> {
+                java.time.LocalDateTime ca = (java.time.LocalDateTime) a.get("createdAt");
+                java.time.LocalDateTime cb = (java.time.LocalDateTime) b.get("createdAt");
+                if (ca == null && cb == null) return 0;
+                if (ca == null) return 1;
+                if (cb == null) return -1;
+                return cb.compareTo(ca);
+            });
+
+            List<Map<String, Object>> top5 = combined.stream().limit(5).map(m -> {
+                m.remove("createdAt");
+                return m;
+            }).toList();
+
+            return ResponseEntity.ok(top5);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
@@ -211,25 +319,119 @@ public class AdminController {
     @GetMapping("/bookings")
     public ResponseEntity<List<Map<String, Object>>> getAllBookings() {
         try {
-            List<Booking> allBookings = bookingRepository.findAll();
-
-            List<Map<String, Object>> bookingsData = allBookings.stream()
+            List<Map<String, Object>> roomBookings = bookingRepository.findAll().stream()
                     .map(booking -> {
-                        Map<String, Object> bookingData = new HashMap<>();
-                        bookingData.put("bookingReference", booking.getBookingReference());
-                        bookingData.put("guestName", booking.getUser().getFirstName() + " " + booking.getUser().getLastName());
-                        bookingData.put("type", "Room");
-                        bookingData.put("checkInDate", booking.getCheckInDate().toString());
-                        bookingData.put("checkOutDate", booking.getCheckOutDate().toString());
-                        bookingData.put("status", booking.getStatus().name());
-                        bookingData.put("totalAmount", booking.getTotalAmount());
-                        return bookingData;
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("bookingReference", booking.getBookingReference());
+                        m.put("guestName", booking.getUser().getFirstName() + " " + booking.getUser().getLastName());
+                        m.put("type", "Room");
+                        m.put("checkInDate", booking.getCheckInDate().toString());
+                        m.put("checkOutDate", booking.getCheckOutDate().toString());
+                        m.put("status", booking.getStatus().name());
+                        m.put("totalAmount", booking.getTotalAmount());
+                        m.put("createdAt", booking.getCreatedAt());
+                        return m;
                     })
                     .toList();
 
-            return ResponseEntity.ok(bookingsData);
+            List<Map<String, Object>> eventBookings = eventBookingRepository.findAll().stream()
+                    .map(ev -> {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("bookingReference", ev.getBookingReference());
+                        m.put("guestName", ev.getUser().getFirstName() + " " + ev.getUser().getLastName());
+                        m.put("type", "Event");
+                        m.put("checkInDate", ev.getEventDate().toString());
+                        m.put("checkOutDate", ev.getEventDate().toString());
+                        m.put("status", ev.getStatus().name());
+                        m.put("totalAmount", ev.getTotalAmount());
+                        m.put("createdAt", ev.getCreatedAt());
+                        return m;
+                    })
+                    .toList();
+
+            List<Map<String, Object>> combined = new ArrayList<>();
+            combined.addAll(roomBookings);
+            combined.addAll(eventBookings);
+
+            combined.sort((a,b) -> {
+                java.time.LocalDateTime ca = (java.time.LocalDateTime) a.get("createdAt");
+                java.time.LocalDateTime cb = (java.time.LocalDateTime) b.get("createdAt");
+                if (ca == null && cb == null) return 0;
+                if (ca == null) return 1;
+                if (cb == null) return -1;
+                return cb.compareTo(ca);
+            });
+
+            // Remove createdAt before returning (frontend doesn't need it directly)
+            List<Map<String, Object>> response = combined.stream().map(m -> {
+                m.remove("createdAt");
+                return m;
+            }).toList();
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Delete booking by reference
+    @DeleteMapping("/bookings/{bookingReference}")
+    @Transactional
+    public ResponseEntity<?> deleteBooking(@PathVariable String bookingReference, @RequestParam(value = "type", required = false) String type) {
+        try {
+            String ref = bookingReference != null ? bookingReference.trim() : "";
+            String typeNorm = type != null ? type.trim().toLowerCase() : null;
+
+            // If type is provided, prioritize it
+            if ("event".equals(typeNorm)) {
+                Optional<EventBooking> eventOpt = eventBookingRepository.findByBookingReference(ref);
+                if (eventOpt.isPresent()) {
+                    EventBooking ev = eventOpt.get();
+                    List<com.sliit.goldenpalmresort.model.Payment> payments = paymentRepository.findByEventBookingId(ev.getId());
+                    if (!payments.isEmpty()) paymentRepository.deleteAll(payments);
+                    eventBookingRepository.delete(ev);
+                    return ResponseEntity.ok(Map.of("message", "Event booking deleted successfully"));
+                }
+                return ResponseEntity.badRequest().body(Map.of("message", "Booking not found"));
+            } else if ("room".equals(typeNorm)) {
+                Optional<Booking> bookingOpt = bookingRepository.findByBookingReference(ref);
+                if (bookingOpt.isPresent()) {
+                    Booking booking = bookingOpt.get();
+                    List<com.sliit.goldenpalmresort.model.Payment> payments = paymentRepository.findByBookingId(booking.getId());
+                    if (!payments.isEmpty()) paymentRepository.deleteAll(payments);
+                    bookingRepository.delete(booking);
+                    return ResponseEntity.ok(Map.of("message", "Booking deleted successfully"));
+                }
+                return ResponseEntity.badRequest().body(Map.of("message", "Booking not found"));
+            }
+
+            Optional<Booking> bookingOpt = bookingRepository.findByBookingReference(ref);
+            if (bookingOpt.isPresent()) {
+                Booking booking = bookingOpt.get();
+                // Delete dependent payments first to satisfy FK constraints
+                List<com.sliit.goldenpalmresort.model.Payment> payments = paymentRepository.findByBookingId(booking.getId());
+                if (!payments.isEmpty()) {
+                    paymentRepository.deleteAll(payments);
+                }
+                bookingRepository.delete(booking);
+                return ResponseEntity.ok(Map.of("message", "Booking deleted successfully"));
+            }
+
+            // Try event bookings if not a room booking
+            Optional<EventBooking> eventOpt = eventBookingRepository.findByBookingReference(ref);
+            if (eventOpt.isPresent()) {
+                EventBooking ev = eventOpt.get();
+                List<com.sliit.goldenpalmresort.model.Payment> payments = paymentRepository.findByEventBookingId(ev.getId());
+                if (!payments.isEmpty()) {
+                    paymentRepository.deleteAll(payments);
+                }
+                eventBookingRepository.delete(ev);
+                return ResponseEntity.ok(Map.of("message", "Event booking deleted successfully"));
+            }
+
+            return ResponseEntity.badRequest().body(Map.of("message", "Booking not found"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("message", "Error deleting booking: " + e.getMessage()));
         }
     }
 
@@ -272,6 +474,7 @@ public class AdminController {
             
             room.setDescription((String) roomData.get("description"));
             room.setAmenities((String) roomData.get("amenities"));
+            room.setImageUrls((String) roomData.get("imageUrls"));
             room.setStatus(Room.RoomStatus.AVAILABLE);
             room.setActive(true);
 
@@ -324,6 +527,7 @@ public class AdminController {
             }
             
             eventSpace.setDimensions((String) eventSpaceData.get("dimensions"));
+            eventSpace.setImageUrls((String) eventSpaceData.get("imageUrls"));
             eventSpace.setStatus(EventSpace.EventSpaceStatus.AVAILABLE);
             eventSpace.setActive(true);
 
@@ -348,6 +552,7 @@ public class AdminController {
             room.setCapacity(request.getCapacity());
             room.setDescription(request.getDescription());
             room.setAmenities(request.getAmenities());
+            room.setImageUrls(request.getImageUrls());
             
             if (request.getStatus() != null) {
                 room.setStatus(Room.RoomStatus.valueOf(request.getStatus()));
@@ -378,6 +583,7 @@ public class AdminController {
             eventSpace.setCateringAvailable(request.getCateringAvailable());
             eventSpace.setAudioVisualEquipment(request.getAudioVisualEquipment());
             eventSpace.setParkingAvailable(request.getParkingAvailable());
+            eventSpace.setImageUrls(request.getImageUrls());
             
             if (request.getStatus() != null) {
                 eventSpace.setStatus(EventSpace.EventSpaceStatus.valueOf(request.getStatus()));
@@ -426,5 +632,201 @@ public class AdminController {
             System.out.println("Error deleting event space: " + e.getMessage());
             return ResponseEntity.internalServerError().body(Map.of("message", "Error deleting event space: " + e.getMessage()));
         }
+    }
+
+    // ==================== DASHBOARD ANALYTICS ENDPOINTS ====================
+
+    // Get revenue chart data
+    @GetMapping("/analytics/revenue")
+    public ResponseEntity<Map<String, Object>> getRevenueAnalytics() {
+        try {
+            Map<String, Object> revenueData = new HashMap<>();
+            
+            // Get monthly revenue data (last 7 months)
+            List<String> months = List.of("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+            List<Double> revenues = new ArrayList<>();
+            
+            // Calculate actual revenue from payments by month
+            LocalDate now = LocalDate.now();
+            for (int i = 6; i >= 0; i--) {
+                LocalDate monthStart = now.minusMonths(i).withDayOfMonth(1);
+                LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
+                
+                double monthlyRevenue = paymentRepository.findAll().stream()
+                    .filter(payment -> payment.getPaymentStatus() == com.sliit.goldenpalmresort.model.Payment.PaymentStatus.COMPLETED)
+                    .filter(payment -> payment.getPaymentDate() != null)
+                    .filter(payment -> {
+                        LocalDate paymentDate = payment.getPaymentDate().toLocalDate();
+                        return !paymentDate.isBefore(monthStart) && !paymentDate.isAfter(monthEnd);
+                    })
+                    .mapToDouble(payment -> payment.getAmount().doubleValue())
+                    .sum();
+                    
+                revenues.add(Math.round(monthlyRevenue * 100.0) / 100.0);
+            }
+            
+            // Current month total
+            double currentMonthRevenue = revenues.get(revenues.size() - 1);
+            double previousMonthRevenue = revenues.size() > 1 ? revenues.get(revenues.size() - 2) : currentMonthRevenue;
+            double growthPercentage = previousMonthRevenue > 0 ? 
+                ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 : 0;
+            
+            revenueData.put("labels", months);
+            revenueData.put("data", revenues);
+            revenueData.put("currentMonth", Math.round(currentMonthRevenue));
+            revenueData.put("growthPercentage", Math.round(growthPercentage * 100.0) / 100.0);
+            revenueData.put("isPositiveGrowth", growthPercentage > 0);
+            
+            return ResponseEntity.ok(revenueData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Get room status analytics
+    @GetMapping("/analytics/rooms")
+    public ResponseEntity<Map<String, Object>> getRoomAnalytics() {
+        try {
+            Map<String, Object> roomData = new HashMap<>();
+            
+            List<Room> allRooms = roomRepository.findAll();
+            
+            // Count rooms by status
+            long availableRooms = allRooms.stream().filter(room -> room.getStatus() == Room.RoomStatus.AVAILABLE).count();
+            long occupiedRooms = allRooms.stream().filter(room -> room.getStatus() == Room.RoomStatus.OCCUPIED).count();
+            long maintenanceRooms = allRooms.stream().filter(room -> room.getStatus() == Room.RoomStatus.MAINTENANCE).count();
+            long outOfOrderRooms = allRooms.stream().filter(room -> room.getStatus() == Room.RoomStatus.BLOCKED).count();
+            
+            roomData.put("labels", List.of("Available", "Occupied", "Maintenance", "Out of Order"));
+            roomData.put("data", List.of(availableRooms, occupiedRooms, maintenanceRooms, outOfOrderRooms));
+            roomData.put("colors", List.of("#38a169", "#3182ce", "#d69e2e", "#e53e3e"));
+            
+            // Calculate occupancy rate
+            long totalActiveRooms = availableRooms + occupiedRooms;
+            double occupancyRate = totalActiveRooms > 0 ? (double) occupiedRooms / totalActiveRooms * 100 : 0;
+            roomData.put("occupancyRate", Math.round(occupancyRate * 100.0) / 100.0);
+            
+            // Add total room count
+            roomData.put("totalRooms", allRooms.size());
+            
+            return ResponseEntity.ok(roomData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Get event spaces analytics
+    @GetMapping("/analytics/eventspaces")
+    public ResponseEntity<Map<String, Object>> getEventSpacesAnalytics() {
+        try {
+            Map<String, Object> eventSpacesData = new HashMap<>();
+            
+            List<EventSpace> allEventSpaces = eventSpaceRepository.findAll();
+            long totalEventSpaces = allEventSpaces.stream().filter(EventSpace::isActive).count();
+            
+            eventSpacesData.put("totalEventSpaces", totalEventSpaces);
+            
+            return ResponseEntity.ok(eventSpacesData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Get user analytics
+    @GetMapping("/analytics/users")
+    public ResponseEntity<Map<String, Object>> getUserAnalytics() {
+        try {
+            Map<String, Object> userData = new HashMap<>();
+            
+            List<User> allUsers = userRepository.findAll();
+            
+            // Count users by role (no STAFF enum; use FRONT_DESK and PAYMENT_OFFICER)
+            long guests = allUsers.stream().filter(user -> user.getRole() == User.UserRole.GUEST).count();
+            long frontDesk = allUsers.stream().filter(user -> user.getRole() == User.UserRole.FRONT_DESK).count();
+            long paymentOfficers = allUsers.stream().filter(user -> user.getRole() == User.UserRole.PAYMENT_OFFICER).count();
+            long managers = allUsers.stream().filter(user -> user.getRole() == User.UserRole.MANAGER).count();
+            long admins = allUsers.stream().filter(user -> user.getRole() == User.UserRole.ADMIN).count();
+            
+            userData.put("labels", List.of("Guests", "Front Desk", "Payment Officers", "Managers", "Admins"));
+            userData.put("data", List.of(guests, frontDesk, paymentOfficers, managers, admins));
+            userData.put("colors", List.of("#e53e3e", "#3182ce", "#38a169", "#d69e2e", "#3182ce"));
+            userData.put("totalUsers", allUsers.size());
+            
+            return ResponseEntity.ok(userData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Get booking analytics
+    @GetMapping("/analytics/bookings")
+    public ResponseEntity<Map<String, Object>> getBookingAnalytics() {
+        try {
+            Map<String, Object> bookingData = new HashMap<>();
+            
+            List<Booking> allBookings = bookingRepository.findAll();
+            
+            // Count bookings by status
+            long confirmed = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.CONFIRMED).count();
+            long pending = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.PENDING).count();
+            long cancelled = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.CANCELLED).count();
+            long checkedOut = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.CHECKED_OUT).count();
+            
+            bookingData.put("labels", List.of("Confirmed", "Pending", "Cancelled", "Completed"));
+            bookingData.put("data", List.of(confirmed, pending, cancelled, checkedOut));
+            bookingData.put("colors", List.of("#38a169", "#d69e2e", "#e53e3e", "#718096"));
+            bookingData.put("totalBookings", allBookings.size());
+            
+            return ResponseEntity.ok(bookingData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Get comprehensive dashboard analytics
+    @GetMapping("/analytics/dashboard")
+    public ResponseEntity<Map<String, Object>> getDashboardAnalytics() {
+        try {
+            Map<String, Object> dashboardData = new HashMap<>();
+            
+            // Get all analytics in one call
+            ResponseEntity<Map<String, Object>> revenueResponse = getRevenueAnalytics();
+            ResponseEntity<Map<String, Object>> roomResponse = getRoomAnalytics();
+            ResponseEntity<Map<String, Object>> userResponse = getUserAnalytics();
+            ResponseEntity<Map<String, Object>> bookingResponse = getBookingAnalytics();
+            ResponseEntity<Map<String, Object>> eventSpacesResponse = getEventSpacesAnalytics();
+            
+            if (revenueResponse.getStatusCode().is2xxSuccessful()) {
+                dashboardData.put("revenue", revenueResponse.getBody());
+            }
+            if (roomResponse.getStatusCode().is2xxSuccessful()) {
+                dashboardData.put("rooms", roomResponse.getBody());
+            }
+            if (userResponse.getStatusCode().is2xxSuccessful()) {
+                dashboardData.put("users", userResponse.getBody());
+            }
+            if (bookingResponse.getStatusCode().is2xxSuccessful()) {
+                dashboardData.put("bookings", bookingResponse.getBody());
+            }
+            if (eventSpacesResponse.getStatusCode().is2xxSuccessful()) {
+                dashboardData.put("eventSpaces", eventSpacesResponse.getBody());
+            }
+            
+            return ResponseEntity.ok(dashboardData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Helper method to calculate monthly revenue from payments
+    private BigDecimal calculateMonthlyRevenue() {
+        LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
+        LocalDateTime startOfMonthDateTime = startOfMonth.atStartOfDay();
+        
+        return paymentRepository.findAll().stream()
+            .filter(payment -> payment.getPaymentStatus() == com.sliit.goldenpalmresort.model.Payment.PaymentStatus.COMPLETED)
+            .filter(payment -> payment.getPaymentDate() != null && payment.getPaymentDate().isAfter(startOfMonthDateTime))
+            .map(payment -> payment.getAmount())
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 } 

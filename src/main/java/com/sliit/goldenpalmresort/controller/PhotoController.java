@@ -3,6 +3,8 @@ package com.sliit.goldenpalmresort.controller;
 import com.sliit.goldenpalmresort.dto.PhotoResponse;
 import com.sliit.goldenpalmresort.model.Photo;
 import com.sliit.goldenpalmresort.service.PhotoService;
+import java.util.Map;
+import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -46,28 +48,36 @@ public class PhotoController {
     }
     
     @PostMapping("/rooms/{roomId}/upload")
-    public ResponseEntity<PhotoResponse> uploadRoomPhoto(
+    public ResponseEntity<Map<String, Object>> uploadRoomPhoto(
             @PathVariable Long roomId,
             @RequestParam("file") MultipartFile file,
-            @RequestParam("uploadedBy") String uploadedBy) {
+            @RequestParam(value = "uploadedBy", defaultValue = "admin") String uploadedBy) {
         try {
-            PhotoResponse photo = photoService.uploadRoomPhoto(roomId, file, uploadedBy);
-            return ResponseEntity.ok(photo);
+            Photo photo = photoService.uploadRoomPhotoToDatabase(roomId, file, uploadedBy);
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", photo.getId());
+            response.put("fileName", photo.getFileName());
+            response.put("message", "Photo uploaded successfully");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
     
     @PostMapping("/event-spaces/{eventSpaceId}/upload")
-    public ResponseEntity<PhotoResponse> uploadEventSpacePhoto(
+    public ResponseEntity<Map<String, Object>> uploadEventSpacePhoto(
             @PathVariable Long eventSpaceId,
             @RequestParam("file") MultipartFile file,
-            @RequestParam("uploadedBy") String uploadedBy) {
+            @RequestParam(value = "uploadedBy", defaultValue = "admin") String uploadedBy) {
         try {
-            PhotoResponse photo = photoService.uploadEventSpacePhoto(eventSpaceId, file, uploadedBy);
-            return ResponseEntity.ok(photo);
+            Photo photo = photoService.uploadEventSpacePhotoToDatabase(eventSpaceId, file, uploadedBy);
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", photo.getId());
+            response.put("fileName", photo.getFileName());
+            response.put("message", "Photo uploaded successfully");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
     
@@ -92,14 +102,17 @@ public class PhotoController {
     }
     
     @GetMapping("/{photoId}/download")
-    public ResponseEntity<Resource> downloadPhoto(@PathVariable Long photoId) {
+    public ResponseEntity<byte[]> downloadPhoto(@PathVariable Long photoId) {
         try {
-            // This would need to be implemented to get the photo from the database
-            // For now, returning a placeholder response
+            Photo photo = photoService.getPhotoById(photoId);
+            if (photo == null || photo.getPhotoData() == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"photo.jpg\"")
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .build();
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + photo.getFileName() + "\"")
+                    .contentType(MediaType.parseMediaType(photo.getContentType()))
+                    .body(photo.getPhotoData());
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }

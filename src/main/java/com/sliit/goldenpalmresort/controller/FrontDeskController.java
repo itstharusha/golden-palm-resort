@@ -3,10 +3,12 @@ package com.sliit.goldenpalmresort.controller;
 import com.sliit.goldenpalmresort.model.Booking;
 import com.sliit.goldenpalmresort.model.EventBooking;
 import com.sliit.goldenpalmresort.model.EventSpace;
+import com.sliit.goldenpalmresort.model.Payment;
 import com.sliit.goldenpalmresort.model.Room;
 import com.sliit.goldenpalmresort.model.User;
 import com.sliit.goldenpalmresort.repository.BookingRepository;
 import com.sliit.goldenpalmresort.repository.EventBookingRepository;
+import com.sliit.goldenpalmresort.repository.PaymentRepository;
 import com.sliit.goldenpalmresort.repository.RoomRepository;
 import com.sliit.goldenpalmresort.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,9 @@ public class FrontDeskController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     // Get front desk statistics
     @GetMapping("/statistics")
@@ -513,6 +518,9 @@ public class FrontDeskController {
                 // Save booking
                 bookingRepository.save(booking);
                 
+                // Complete any pending payments for this booking
+                completeBookingPayments(booking);
+                
                 System.out.println("Successfully checked in guest: " + user.getFirstName() + " " + user.getLastName() + 
                                  " to room: " + room.getRoomNumber());
                 
@@ -600,6 +608,9 @@ public class FrontDeskController {
                 // Save booking
                 bookingRepository.save(booking);
                 
+                // Complete any pending payments for this booking
+                completeBookingPayments(booking);
+                
                 System.out.println("Successfully checked out guest: " + user.getFirstName() + " " + user.getLastName() + 
                                  " from room: " + room.getRoomNumber());
                 
@@ -635,6 +646,9 @@ public class FrontDeskController {
                 booking.setStatus(Booking.BookingStatus.CONFIRMED);
                 booking.setUpdatedAt(LocalDateTime.now());
                 bookingRepository.save(booking);
+                
+                // Complete any pending payments for this booking
+                completeBookingPayments(booking);
                 return ResponseEntity.ok(Map.of("message", "Room booking confirmed successfully"));
             }
 
@@ -670,6 +684,9 @@ public class FrontDeskController {
                 roomRepository.save(booking.getRoom());
                 
                 bookingRepository.save(booking);
+                
+                // Complete any pending payments for this booking
+                completeBookingPayments(booking);
                 return ResponseEntity.ok(Map.of("message", "Room booking rejected successfully"));
             }
 
@@ -772,6 +789,9 @@ public class FrontDeskController {
                 
                 booking.setUpdatedAt(LocalDateTime.now());
                 bookingRepository.save(booking);
+                
+                // Complete any pending payments for this booking
+                completeBookingPayments(booking);
                 return ResponseEntity.ok(Map.of("message", "Room booking updated successfully"));
             }
 
@@ -909,4 +929,34 @@ public class FrontDeskController {
             return ResponseEntity.internalServerError().build();
         }
     }
-} 
+    
+    // Helper method to complete pending payments for a booking
+    private void completeBookingPayments(Booking booking) {
+        try {
+            // Find all pending payments for this booking
+            List<Payment> pendingPayments = paymentRepository.findAll().stream()
+                .filter(payment -> payment.getBooking() != null && 
+                                 payment.getBooking().getId().equals(booking.getId()) &&
+                                 payment.getPaymentStatus() == Payment.PaymentStatus.PENDING)
+                .toList();
+            
+            // Mark all pending payments as completed
+            for (Payment payment : pendingPayments) {
+                payment.setPaymentStatus(Payment.PaymentStatus.COMPLETED);
+                payment.setPaymentDate(LocalDateTime.now());
+                payment.setProcessedBy("Front Desk - Auto-completed on check-in");
+                paymentRepository.save(payment);
+                System.out.println("Completed payment ID: " + payment.getId() + " for booking: " + booking.getBookingReference());
+            }
+            
+            if (pendingPayments.isEmpty()) {
+                System.out.println("No pending payments found for booking: " + booking.getBookingReference());
+            } else {
+                System.out.println("Completed " + pendingPayments.size() + " payments for booking: " + booking.getBookingReference());
+            }
+        } catch (Exception e) {
+            System.err.println("Error completing payments for booking " + booking.getBookingReference() + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+}

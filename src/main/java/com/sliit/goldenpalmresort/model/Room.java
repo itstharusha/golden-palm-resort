@@ -40,6 +40,9 @@ public class Room {
     @Column(name = "is_active")
     private boolean isActive = true;
     
+    @Column(name = "image_urls", columnDefinition = "TEXT")
+    private String imageUrls; // Comma-separated URLs
+    
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Photo> photos = new ArrayList<>();
     
@@ -88,6 +91,9 @@ public class Room {
     
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
+    
+    public String getImageUrls() { return imageUrls; }
+    public void setImageUrls(String imageUrls) { this.imageUrls = imageUrls; }
     
     public List<Photo> getPhotos() { return photos; }
     public void setPhotos(List<Photo> photos) { this.photos = photos; }

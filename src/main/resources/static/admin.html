@@ -6,30 +6,714 @@
     <title>Admin Dashboard - Golden Palm Resort</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fafafa;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+        
         .sidebar {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ffffff;
+            border-right: none;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
+            border-radius: 0 24px 24px 0;
+            position: relative;
         }
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            padding: 12px 20px;
-            margin: 4px 0;
-            border-radius: 8px;
-            transition: all 0.3s ease;
+        
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent);
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+        
+        .sidebar-header {
+            padding: 32px 24px;
+            border-bottom: none;
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            letter-spacing: -0.5px;
+        }
+        
+        .sidebar-brand .brand-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            background: rgba(255,255,255,0.1);
+            font-size: 18px;
+            box-shadow: 0 8px 20px rgba(229, 62, 62, 0.4);
         }
+        
+        .sidebar .nav-link {
+            color: #718096;
+            padding: 16px 24px;
+            margin: 6px 20px;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 16px;
+            z-index: -1;
+        }
+        
+        .sidebar .nav-link:hover {
+            color: #2d3748;
+            background: rgba(229, 62, 62, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .sidebar .nav-link.active {
+            color: white;
+            background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
+            box-shadow: 0 8px 20px rgba(229, 62, 62, 0.4);
+            transform: translateX(4px);
+        }
+        
+        .sidebar .nav-link.active::before {
+            width: 100%;
+        }
+        
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            background: #fafafa;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .main-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.03) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 140, 140, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 32px 40px;
+            border-bottom: none;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #2d3748;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+        
+        .page-subtitle {
+            color: #718096;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
         .card {
             border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            background: white;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 24px;
+            border-radius: 16px 16px 0 0 !important;
+        }
+        
+        .card-body {
+            padding: 24px;
+        }
+        
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
             color: white;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        
+        .stat-card-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        .stat-card-success::before {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+        }
+        
+        .stat-card-warning {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+        
+        .stat-card-warning::before {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+        }
+        
+        .stat-card-info {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        
+        .stat-card-info::before {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 2;
+            letter-spacing: -1px;
+        }
+        
+        .stat-label {
+            font-size: 15px;
+            opacity: 0.9;
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .stat-icon {
+            font-size: 28px;
+            opacity: 0.7;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .btn {
+            border-radius: 16px;
+            font-weight: 600;
+            padding: 14px 28px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255, 107, 107, 0.4);
+            background: linear-gradient(135deg, #ff5252 0%, #ff7979 100%);
+        }
+        
+        .btn-outline-primary {
+            color: #ff6b6b;
+            border: 2px solid #ff6b6b;
+            background: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        /* Organic blob decorations */
+        .blob-decoration {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 140, 140, 0.05) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .blob-1 {
+            width: 200px;
+            height: 200px;
+            top: -100px;
+            right: -100px;
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        }
+        
+        .blob-2 {
+            width: 150px;
+            height: 150px;
+            bottom: -75px;
+            left: -75px;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+        }
+        
+        /* Dashboard Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+            align-items: start;
+        }
+        
+        .dashboard-left {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .dashboard-right {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* Revenue Tracker - Main Card */
+        .revenue-tracker {
+            position: relative;
+            height: 100%;
+        }
+        
+        .revenue-tracker .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        
+        .revenue-tracker .card-subtitle {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 0;
+        }
+        
+        .revenue-chart-container {
+            position: relative;
+            height: 250px;
+        }
+        
+        .amount-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #2d3748;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            z-index: 10;
+        }
+        
+        .weekly-progress {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .progress-indicator .progress-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #2d3748;
+            display: block;
+            line-height: 1;
+        }
+        
+        .progress-indicator small {
+            color: #718096;
+            font-size: 13px;
+        }
+        
+        .week-days {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .week-days .day {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f7fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #a0aec0;
+        }
+        
+        .week-days .day.active {
+            background: #2d3748;
+            color: white;
+        }
+        
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        
+        .stat-card.compact {
+            background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(229, 62, 62, 0.3);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card.compact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card.compact.success {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            color: white;
+        }
+        
+        .stat-card.compact.warning {
+            background: linear-gradient(135deg, #d69e2e 0%, #b7791f 100%);
+            color: white;
+        }
+        
+        .stat-content {
+            text-align: center;
+        }
+        
+        .stat-content .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        
+        .stat-content .stat-label {
+            font-size: 13px;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+        
+        /* Projects Card */
+        .projects-card {
+            height: fit-content;
+        }
+        
+        .projects-card .card-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 24px;
+        }
+        
+        .projects-card h5 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+        }
+        
+        .project-item {
+            display: flex;
+            gap: 16px;
+            padding: 20px 0;
+            border-bottom: 1px solid #f7fafc;
+        }
+        
+        .project-item:last-child {
+            border-bottom: none;
+        }
+        
+        .project-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .project-icon.deluxe {
+            background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
+        }
+        
+        .project-icon.suite {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+        }
+        
+        .project-icon.event {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+        }
+        
+        .project-details h6 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+        
+        .project-rate {
+            font-size: 13px;
+            color: #718096;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .project-tags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .project-tags .tag {
+            background: #f7fafc;
+            color: #4a5568;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .project-tags .tag.pending {
+            background: #feb2b2;
+            color: #9b2c2c;
+        }
+        
+        .project-tags .tag.confirmed {
+            background: #9ae6b4;
+            color: #22543d;
+        }
+        
+        .project-description {
+            font-size: 12px;
+            color: #a0aec0;
+            line-height: 1.4;
+            margin: 0;
+        }
+        
+        /* Analytics Summary */
+        .analytics-summary {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+        
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .summary-chart {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+        
+        .summary-details h6 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+        
+        .summary-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2d3748;
+            display: block;
+        }
+        
+        .summary-change {
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .summary-change.positive {
+            color: #38a169;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .revenue-tracker {
+                min-height: 300px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            
+            .dashboard-grid {
+                gap: 16px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .project-item {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .revenue-tracker {
+                min-height: 250px;
+            }
+        }
+        
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .table th {
+            background: #f8fafc;
+            border: none;
+            font-weight: 600;
+            color: #374151;
+            padding: 16px;
+        }
+        
+        .table td {
+            border: none;
+            padding: 16px;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .badge {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 6px 12px;
+        }
+        
+        .form-control {
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .modal-content {
+            border-radius: 16px;
+            border: none;
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 24px;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #e2e8f0;
+            padding: 24px;
         }
     </style>
 </head>
@@ -38,51 +722,72 @@
         <div class="row">
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 px-0">
-                <div class="sidebar p-3">
-                    <div class="text-center mb-4">
-                        <h4 class="text-white mb-0">
-                            <i class="fas fa-hotel me-2"></i>
-                            Golden Palm
-                        </h4>
-                        <small class="text-white-50">Admin Dashboard</small>
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <div class="sidebar-brand">
+                            <div class="brand-icon">
+                                <i class="fas fa-hotel" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                <div>Golden Palm</div>
+                                <small style="color: #64748b; font-size: 12px;">Admin</small>
+                            </div>
+                        </div>
                     </div>
                     
-                    <nav class="nav flex-column">
+                    <nav class="nav flex-column" style="padding: 16px 0;">
                         <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                            <i class="fas fa-chart-pie" aria-hidden="true"></i>
+                            <span>Dashboard</span>
                         </a>
                         <a class="nav-link" href="#users" data-bs-toggle="tab">
-                            <i class="fas fa-users"></i> User Management
+                            <i class="fas fa-users" aria-hidden="true"></i>
+                            <span>Users</span>
                         </a>
                         <a class="nav-link" href="#rooms" data-bs-toggle="tab">
-                            <i class="fas fa-bed"></i> Room Management
+                            <i class="fas fa-bed" aria-hidden="true"></i>
+                            <span>Rooms</span>
                         </a>
                         <a class="nav-link" href="#events" data-bs-toggle="tab">
-                            <i class="fas fa-calendar-alt"></i> Event Spaces
+                            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                            <span>Events</span>
                         </a>
                         <a class="nav-link" href="#bookings" data-bs-toggle="tab">
-                            <i class="fas fa-calendar-check"></i> Bookings
+                            <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                            <span>Bookings</span>
                         </a>
                     </nav>
                     
-                    <div class="mt-auto pt-3">
-                        <button class="btn btn-outline-light btn-sm w-100" onclick="logout()">
-                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    <div style="margin-top: auto; padding: 16px 20px; border-top: 1px solid #e2e8f0;">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="logout()" style="border-radius: 8px;">
+                            <i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Logout
                         </button>
                     </div>
                 </div>
             </div>
             
             <!-- Main Content -->
-            <div class="col-md-9 col-lg-10">
-                <div class="p-4">
-                    <!-- Header -->
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Header -->
+                <div class="header">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h2 class="mb-1" id="pageTitle">Dashboard</h2>
-                            <p class="text-muted mb-0">Welcome back, Admin!</p>
+                            <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                            <p class="page-subtitle">Welcome back, Admin!</p>
+                        </div>
+                        <div>
+                            <span class="badge bg-light text-dark" style="font-size: 14px;">
+                                <i class="fas fa-calendar me-1" aria-hidden="true"></i>
+                                <span id="currentDate"></span>
+                            </span>
                         </div>
                     </div>
+                </div>
+                
+                <div class="px-4" style="position: relative; z-index: 1;">
+                    <!-- Organic blob decorations -->
+                    <div class="blob-decoration blob-1"></div>
+                    <div class="blob-decoration blob-2"></div>
                     
                     <!-- Alert Container -->
                     <div id="alertContainer"></div>
@@ -91,96 +796,119 @@
                     <div class="tab-content">
                         <!-- Dashboard Tab -->
                         <div class="tab-pane fade show active" id="dashboard">
-                            <div class="row mb-4">
-                                <div class="col-md-3">
-                                    <div class="card stat-card">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between">
-                                                <div>
-                                                    <h3 class="mb-1" id="totalUsers">0</h3>
-                                                    <p class="mb-0">Total Users</p>
-                                                </div>
-                                                <div class="align-self-center">
-                                                    <i class="fas fa-users fa-2x"></i>
-                                                </div>
-                                            </div>
-                                        </div>
+                            <!-- Top Stats Cards -->
+                            <div class="stats-row mb-4">
+                                <div class="stat-card compact">
+                                    <div class="stat-content">
+                                        <div class="stat-number" id="totalUsers">—</div>
+                                        <div class="stat-label">Active Users</div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="card stat-card">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between">
-                                                <div>
-                                                    <h3 class="mb-1" id="totalRooms">0</h3>
-                                                    <p class="mb-0">Available Rooms</p>
-                                                </div>
-                                                <div class="align-self-center">
-                                                    <i class="fas fa-bed fa-2x"></i>
-                                                </div>
-                                            </div>
-                                        </div>
+                                
+                                <div class="stat-card compact success">
+                                    <div class="stat-content">
+                                        <div class="stat-number" id="totalRooms">—</div>
+                                        <div class="stat-label">Total Rooms</div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="card stat-card">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between">
-                                                <div>
-                                                    <h3 class="mb-1" id="totalBookings">0</h3>
-                                                    <p class="mb-0">Active Bookings</p>
-                                                </div>
-                                                <div class="align-self-center">
-                                                    <i class="fas fa-calendar-check fa-2x"></i>
-                                                </div>
-                                            </div>
-                                        </div>
+                                
+                                <div class="stat-card compact warning">
+                                    <div class="stat-content">
+                                        <div class="stat-number" id="totalBookings">—</div>
+                                        <div class="stat-label">Pending Bookings</div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="card stat-card">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between">
-                                                <div>
-                                                    <h3 class="mb-1" id="totalRevenue">$0</h3>
-                                                    <p class="mb-0">Monthly Revenue</p>
-                                                </div>
-                                                <div class="align-self-center">
-                                                    <i class="fas fa-dollar-sign fa-2x"></i>
-                                                </div>
-                                            </div>
-                                        </div>
+                                
+                                <div class="stat-card compact info">
+                                    <div class="stat-content">
+                                        <div class="stat-number" id="totalEventSpaces">—</div>
+                                        <div class="stat-label">Event Spaces</div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="card">
-                                        <div class="card-header bg-transparent">
-                                            <h5 class="mb-0">Recent Bookings</h5>
-                                        </div>
+                            <!-- Main Dashboard Grid -->
+                            <div class="dashboard-grid">
+                                <!-- Left Column -->
+                                <div class="dashboard-left">
+                                    <!-- Revenue Tracker - Main Feature -->
+                                    <div class="card revenue-tracker">
                                         <div class="card-body">
-                                            <div class="table-responsive">
-                                                <table class="table table-hover">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Booking ID</th>
-                                                            <th>Guest</th>
-                                                            <th>Type</th>
-                                                            <th>Date</th>
-                                                            <th>Status</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="recentBookingsTable">
-                                                        <!-- Recent bookings will be loaded here -->
-                                                    </tbody>
-                                                </table>
+                                            <div class="d-flex justify-content-between align-items-start mb-4">
+                                                <div>
+                                                    <h3 class="card-title">Revenue Tracker</h3>
+                                                    <p class="card-subtitle">Track changes in revenue over time and access detailed data on each booking and payments received</p>
+                                                </div>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        Week
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="#">Week</a></li>
+                                                        <li><a class="dropdown-item" href="#">Month</a></li>
+                                                        <li><a class="dropdown-item" href="#">Year</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Revenue Chart Area -->
+                                            <div class="revenue-chart-container">
+                                                <div class="revenue-amount">
+                                                    <span class="amount-badge" id="totalRevenue">$—</span>
+                                                </div>
+                                                <canvas id="revenueChart" height="200"></canvas>
+                                                
+                                                <!-- Weekly Progress -->
+                                                <div class="weekly-progress">
+                                                    <div class="progress-indicator">
+                                                        <span class="progress-value" id="revenueGrowth">—%</span>
+                                                        <small id="revenueGrowthText">Loading revenue data...</small>
+                                                    </div>
+                                                    <div class="week-days">
+                                                        <span class="day">S</span>
+                                                        <span class="day">M</span>
+                                                        <span class="day active">T</span>
+                                                        <span class="day">W</span>
+                                                        <span class="day">T</span>
+                                                        <span class="day">F</span>
+                                                        <span class="day">S</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Recent Bookings (compact list) moved below Revenue Tracker -->
+                                    <div class="card projects-card">
+                                        <div class="card-header">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h5>Your Recent Bookings</h5>
+                                                <a href="#bookings" class="text-muted" data-bs-toggle="tab">See all Bookings</a>
+                                            </div>
+                                        </div>
+                                        <div class="card-body" id="recentBookingsList">
+                                            <!-- Recent bookings list will be loaded here -->
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-4">
+                                
+                                <!-- Right Column -->
+                                <div class="dashboard-right">
+                                    <!-- Analytics Summary moved up -->
+                                    <div class="analytics-summary">
+                                        <div class="summary-item">
+                                            <div class="summary-chart">
+                                                <canvas id="occupancyChart" width="60" height="60"></canvas>
+                                            </div>
+                                            <div class="summary-details">
+                                                <h6>Occupancy Rate</h6>
+                                                <span class="summary-value" id="occupancyRate">—%</span>
+                                                <small class="summary-change" id="occupancyChange">—%</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Actions -->
                                     <div class="card">
                                         <div class="card-header bg-transparent">
                                             <h5 class="mb-0">Quick Actions</h5>
@@ -188,19 +916,35 @@
                                         <div class="card-body">
                                             <div class="d-grid gap-2">
                                                 <button class="btn btn-outline-primary" onclick="showAddUserModal()">
-                                                    <i class="fas fa-user-plus me-2"></i>Add User
+                                                    <i class="fas fa-user-plus me-2" aria-hidden="true"></i>Add User
                                                 </button>
                                                 <button class="btn btn-outline-success" onclick="showAddRoomModal()">
-                                                    <i class="fas fa-bed me-2"></i>Add Room
+                                                    <i class="fas fa-bed me-2" aria-hidden="true"></i>Add Room
                                                 </button>
                                                 <button class="btn btn-outline-info" onclick="showAddEventSpaceModal()">
-                                                    <i class="fas fa-calendar-plus me-2"></i>Add Event Space
+                                                    <i class="fas fa-calendar-plus me-2" aria-hidden="true"></i>Add Event Space
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- User Analytics Chart -->
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-users me-2" aria-hidden="true"></i>User Distribution
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="userRolesChart" width="400" height="300"></canvas>
+                                        </div>
+                                    </div>
+
+                                    <!-- Removed duplicate Recent Bookings from right column (now under Revenue) -->
                                 </div>
                             </div>
+                            
+                            <!-- Bottom section removed per request (duplicate recent bookings and moved Quick Actions) -->
                         </div>
                         
                         <!-- Users Tab -->
@@ -344,32 +1088,32 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">First Name</label>
-                                    <input type="text" class="form-control" name="firstName" required>
+                                    <label class="form-label" for="addUserFirstName">First Name</label>
+                                    <input type="text" class="form-control" id="addUserFirstName" name="firstName" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Last Name</label>
-                                    <input type="text" class="form-control" name="lastName" required>
+                                    <label class="form-label" for="addUserLastName">Last Name</label>
+                                    <input type="text" class="form-control" id="addUserLastName" name="lastName" required>
                                 </div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-control" name="username" required>
+                            <label class="form-label" for="addUserUsername">Username</label>
+                            <input type="text" class="form-control" id="addUserUsername" name="username" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="email" required>
+                            <label class="form-label" for="addUserEmail">Email</label>
+                            <input type="email" class="form-control" id="addUserEmail" name="email" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Phone</label>
-                            <input type="tel" class="form-control" name="phone">
+                            <label class="form-label" for="addUserPhone">Phone</label>
+                            <input type="tel" class="form-control" id="addUserPhone" name="phone">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Role</label>
-                            <select class="form-select" name="role" required>
+                            <label class="form-label" for="addUserRole">Role</label>
+                            <select class="form-select" id="addUserRole" name="role" required>
                                 <option value="GUEST">Guest</option>
                                 <option value="ADMIN">Admin</option>
                                 <option value="MANAGER">Manager</option>
@@ -378,14 +1122,82 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" class="form-control" name="password" required>
+                            <label class="form-label" for="addUserPassword">Password</label>
+                            <input type="password" class="form-control" id="addUserPassword" name="password" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" onclick="addUser()">Add User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId" name="id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label" for="editUserFirstName">First Name</label>
+                                    <input type="text" class="form-control" id="editUserFirstName" name="firstName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label" for="editUserLastName">Last Name</label>
+                                    <input type="text" class="form-control" id="editUserLastName" name="lastName" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="editUserUsername">Username</label>
+                            <input type="text" class="form-control" id="editUserUsername" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="editUserEmail">Email</label>
+                            <input type="email" class="form-control" id="editUserEmail" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="editUserPhone">Phone</label>
+                            <input type="tel" class="form-control" id="editUserPhone" name="phone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="editUserRole">Role</label>
+                            <select class="form-select" id="editUserRole" name="role" required>
+                                <option value="GUEST">Guest</option>
+                                <option value="ADMIN">Admin</option>
+                                <option value="MANAGER">Manager</option>
+                                <option value="FRONT_DESK">Front Desk</option>
+                                <option value="PAYMENT_OFFICER">Payment Officer</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="editUserIsActive">Status</label>
+                            <select class="form-select" id="editUserIsActive" name="isActive" required>
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="editUserPassword">New Password (leave blank to keep current)</label>
+                            <input type="password" class="form-control" id="editUserPassword" name="password" placeholder="Enter new password">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateUser()">Update User</button>
                 </div>
             </div>
         </div>
@@ -445,6 +1257,22 @@
                         <div class="mb-3">
                             <label class="form-label">Amenities</label>
                             <input type="text" class="form-control" name="amenities" placeholder="WiFi, AC, TV, etc.">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Room Images (Up to 4 Photos)</label>
+                            <div class="mb-2">
+                                <input type="file" class="form-control" id="roomPhoto1" accept="image/*">
+                            </div>
+                            <div class="mb-2">
+                                <input type="file" class="form-control" id="roomPhoto2" accept="image/*">
+                            </div>
+                            <div class="mb-2">
+                                <input type="file" class="form-control" id="roomPhoto3" accept="image/*">
+                            </div>
+                            <div class="mb-2">
+                                <input type="file" class="form-control" id="roomPhoto4" accept="image/*">
+                            </div>
+                            <small class="text-muted">Select up to 4 image files (JPG, PNG, etc.)</small>
                         </div>
                     </form>
                 </div>
@@ -510,6 +1338,22 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Event Space Images (Up to 4 Photos)</label>
+                            <div class="mb-2">
+                                <input type="file" class="form-control" id="eventSpacePhoto1" accept="image/*">
+                            </div>
+                            <div class="mb-2">
+                                <input type="file" class="form-control" id="eventSpacePhoto2" accept="image/*">
+                            </div>
+                            <div class="mb-2">
+                                <input type="file" class="form-control" id="eventSpacePhoto3" accept="image/*">
+                            </div>
+                            <div class="mb-2">
+                                <input type="file" class="form-control" id="eventSpacePhoto4" accept="image/*">
+                            </div>
+                            <small class="text-muted">Select up to 4 image files (JPG, PNG, etc.)</small>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -551,8 +1395,13 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label">Room Type</label>
-                                            <input type="text" class="form-control" id="roomType" name="roomType" required>
+                                            <label class="form-label" for="roomType">Room Type</label>
+                                            <select class="form-select" id="roomType" name="roomType" required>
+                                                <option value="STANDARD">Standard</option>
+                                                <option value="DELUXE">Deluxe</option>
+                                                <option value="SUITE">Suite</option>
+                                                <option value="PRESIDENTIAL">Presidential</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -596,12 +1445,23 @@
                         
                         <div class="tab-pane fade" id="roomPhotosTab">
                             <div class="mb-3">
-                                <label class="form-label">Upload Photos (Max 5)</label>
-                                <input type="file" class="form-control" id="roomPhotoUpload" accept="image/*" multiple>
-                                <small class="text-muted">You can upload up to 5 photos per room</small>
+                                <label class="form-label">Room Images (Up to 4 Photos)</label>
+                                <div class="mb-2">
+                                    <input type="file" class="form-control" id="roomUpdatePhoto1" accept="image/*">
+                                </div>
+                                <div class="mb-2">
+                                    <input type="file" class="form-control" id="roomUpdatePhoto2" accept="image/*">
+                                </div>
+                                <div class="mb-2">
+                                    <input type="file" class="form-control" id="roomUpdatePhoto3" accept="image/*">
+                                </div>
+                                <div class="mb-2">
+                                    <input type="file" class="form-control" id="roomUpdatePhoto4" accept="image/*">
+                                </div>
+                                <small class="text-muted">Select new photos to replace existing ones (leave empty to keep current photos)</small>
                             </div>
-                            <div id="roomPhotosContainer" class="row">
-                                <!-- Photos will be displayed here -->
+                            <div id="roomPhotosPreview" class="row">
+                                <!-- Image previews will be displayed here -->
                             </div>
                         </div>
                     </div>
@@ -720,12 +1580,23 @@
                         
                         <div class="tab-pane fade" id="eventSpacePhotosTab">
                             <div class="mb-3">
-                                <label class="form-label">Upload Photos (Max 5)</label>
-                                <input type="file" class="form-control" id="eventSpacePhotoUpload" accept="image/*" multiple>
-                                <small class="text-muted">You can upload up to 5 photos per event space</small>
+                                <label class="form-label">Event Space Images (Up to 4 Photos)</label>
+                                <div class="mb-2">
+                                    <input type="file" class="form-control" id="eventSpaceUpdatePhoto1" accept="image/*">
+                                </div>
+                                <div class="mb-2">
+                                    <input type="file" class="form-control" id="eventSpaceUpdatePhoto2" accept="image/*">
+                                </div>
+                                <div class="mb-2">
+                                    <input type="file" class="form-control" id="eventSpaceUpdatePhoto3" accept="image/*">
+                                </div>
+                                <div class="mb-2">
+                                    <input type="file" class="form-control" id="eventSpaceUpdatePhoto4" accept="image/*">
+                                </div>
+                                <small class="text-muted">Select new photos to replace existing ones (leave empty to keep current photos)</small>
                             </div>
-                            <div id="eventSpacePhotosContainer" class="row">
-                                <!-- Photos will be displayed here -->
+                            <div id="eventSpacePhotosPreview" class="row">
+                                <!-- Image previews will be displayed here -->
                             </div>
                         </div>
                     </div>
@@ -756,6 +1627,107 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Display current date
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentDate = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = currentDate;
+        });
+        
+        // Tab/page title + sidebar active state sync + URL hash boot
+        (function() {
+            const titles = {
+                'dashboard': 'Dashboard',
+                'users': 'User Management',
+                'rooms': 'Room Management',
+                'events': 'Event Spaces',
+                'bookings': 'Bookings'
+            };
+
+            function setActiveById(targetId) {
+                document.getElementById('pageTitle').textContent = titles[targetId] || 'Dashboard';
+                document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                    if (link.getAttribute('href') === `#${targetId}`) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+
+            document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function(e) {
+                    const targetId = e.target.getAttribute('href').substring(1);
+                    setActiveById(targetId);
+                    if (history.pushState) {
+                        history.pushState(null, '', `#${targetId}`);
+                    } else {
+                        location.hash = `#${targetId}`;
+                    }
+                });
+            });
+
+            // Initialize from hash on load
+            const initial = (location.hash || '#dashboard').substring(1);
+            const initialTrigger = document.querySelector(`a[href="#${initial}"][data-bs-toggle="tab"]`);
+            if (initialTrigger) {
+                // Activate corresponding tab
+                const tab = new bootstrap.Tab(initialTrigger);
+                tab.show();
+                setActiveById(initial);
+            } else {
+                setActiveById('dashboard');
+            }
+        })();
+
+        // Empty states for tables if no data is injected by JS
+        (function addEmptyStates(){
+            function ensureRow(tbodyId, cols, text){
+                const el = document.getElementById(tbodyId);
+                if (el && !el.children.length) {
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.colSpan = cols; td.className = 'text-center text-muted';
+                    td.textContent = text;
+                    tr.appendChild(td); el.appendChild(tr);
+                }
+            }
+            ensureRow('recentBookingsTable', 5, 'No recent bookings to display');
+            ensureRow('usersTable', 6, 'No users found');
+            ensureRow('roomsTable', 7, 'No rooms found');
+            ensureRow('eventSpacesTable', 6, 'No event spaces found');
+            ensureRow('bookingsTable', 7, 'No bookings found');
+        })();
+
+        // Enforce upload max 5 files on photo inputs
+        (function enforceUploadLimits(){
+            function limitFiles(input){
+                if (input && input.files && input.files.length > 5) {
+                    alert('You can upload up to 5 photos.');
+                    input.value = '';
+                }
+            }
+            const roomUpload = document.getElementById('roomPhotoUpload');
+            const eventUpload = document.getElementById('eventSpacePhotoUpload');
+            if (roomUpload) roomUpload.addEventListener('change', () => limitFiles(roomUpload));
+            if (eventUpload) eventUpload.addEventListener('change', () => limitFiles(eventUpload));
+        })();
+
+        // Safe logout fallback if missing
+        if (typeof window.logout !== 'function') {
+            window.logout = function(){
+                // Best-effort clear and redirect; real logout handled in admin.js normally
+                try { localStorage.clear(); sessionStorage.clear(); } catch(e) {}
+                window.location.href = 'login.html';
+            }
+        }
+        
+    </script>
     <script src="js/admin.js"></script>
 </body>
 </html> 
