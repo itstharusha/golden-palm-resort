@@ -417,8 +417,26 @@ public class ManagerController {
     }
 
     private List<String> getPeakOccupancyDays() {
-        // This would typically involve more complex analytics
-        // For now, return a simple list
-        return List.of("Friday", "Saturday", "Sunday");
+        // Calculate peak occupancy days from actual booking data
+        try {
+            Map<String, Long> dayBookingCounts = bookingRepository.findAll().stream()
+                .filter(booking -> booking.getStatus() == Booking.BookingStatus.CONFIRMED || 
+                                 booking.getStatus() == Booking.BookingStatus.CHECKED_IN)
+                .collect(Collectors.groupingBy(
+                    booking -> booking.getCheckInDate().getDayOfWeek().name(),
+                    Collectors.counting()
+                ));
+            
+            // Return top 3 days by booking count
+            return dayBookingCounts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(3)
+                .map(Map.Entry::getKey)
+                .map(day -> day.substring(0, 1) + day.substring(1).toLowerCase()) // Format: Friday
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            // Fallback to common peak days if calculation fails
+            return List.of("Friday", "Saturday", "Sunday");
+        }
     }
 }

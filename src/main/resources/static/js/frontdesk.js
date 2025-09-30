@@ -103,19 +103,19 @@ async function loadStatistics() {
             document.getElementById('currentGuests').textContent = stats.currentGuests || 0;
         } else {
             console.error('Statistics API error:', response.status, response.statusText);
-            // Set default values if API is not available
-            document.getElementById('totalCheckins').textContent = '3';
-            document.getElementById('totalCheckouts').textContent = '2';
-            document.getElementById('pendingBookings').textContent = '5';
-            document.getElementById('currentGuests').textContent = '12';
+            document.getElementById('totalCheckins').textContent = 'N/A';
+            document.getElementById('totalCheckouts').textContent = 'N/A';
+            document.getElementById('pendingBookings').textContent = 'N/A';
+            document.getElementById('currentGuests').textContent = 'N/A';
+            showAlert('Unable to load front desk statistics. Please check your connection.', 'warning');
         }
     } catch (error) {
         console.error('Error loading statistics:', error);
-        // Set default values if API is not available
-        document.getElementById('totalCheckins').textContent = '3';
-        document.getElementById('totalCheckouts').textContent = '2';
-        document.getElementById('pendingBookings').textContent = '5';
-        document.getElementById('currentGuests').textContent = '12';
+        document.getElementById('totalCheckins').textContent = 'N/A';
+        document.getElementById('totalCheckouts').textContent = 'N/A';
+        document.getElementById('pendingBookings').textContent = 'N/A';
+        document.getElementById('currentGuests').textContent = 'N/A';
+        showAlert('Unable to load front desk statistics. Please check your connection.', 'warning');
     }
 }
 
@@ -131,26 +131,16 @@ async function loadTodayArrivals() {
         if (response.ok) {
             const arrivals = await response.json();
             displayTodayArrivals(arrivals);
+        } else {
+            console.error('Today arrivals API error:', response.status, response.statusText);
+            displayTodayArrivals([]);
+            showAlert('Unable to load today\'s arrivals. Please check your connection.', 'warning');
         }
     } catch (error) {
         console.error('Error loading today\'s arrivals:', error);
-        // Display sample data
-        displayTodayArrivals([
-            {
-                bookingReference: 'BK001',
-                guestName: 'John Doe',
-                roomNumber: '101',
-                checkInDate: '2024-01-15T14:00:00',
-                status: 'PENDING'
-            },
-            {
-                bookingReference: 'BK002',
-                guestName: 'Jane Smith',
-                roomNumber: '205',
-                checkInDate: '2024-01-15T16:00:00',
-                status: 'CONFIRMED'
-            }
-        ]);
+        // Display empty state instead of sample data
+        displayTodayArrivals([]);
+        showAlert('Unable to load today\'s arrivals. Please check your connection.', 'warning');
     }
 }
 
@@ -158,6 +148,17 @@ async function loadTodayArrivals() {
 function displayTodayArrivals(arrivals) {
     const tbody = document.getElementById('todayArrivalsTable');
     tbody.innerHTML = '';
+    
+    if (arrivals.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    <i class="fas fa-info-circle me-2"></i>No arrivals scheduled for today
+                </td>
+            </tr>
+        `;
+        return;
+    }
     
     arrivals.forEach(arrival => {
         const row = document.createElement('tr');
