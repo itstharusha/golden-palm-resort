@@ -1,0 +1,32 @@
+    // Helper method to complete pending payments for a booking
+    private void completeBookingPayments(Booking booking) {
+        try {
+            // Find all pending payments for this booking
+            List<Payment> pendingPayments = paymentRepository.findAll().stream()
+                .filter(payment -> payment.getBooking() != null && 
+                                 payment.getBooking().getId().equals(booking.getId()) &&
+                                 payment.getPaymentStatus() == Payment.PaymentStatus.PENDING)
+                .toList();
+            
+            // Mark all pending payments as completed
+            for (Payment payment : pendingPayments) {
+                payment.setPaymentStatus(Payment.PaymentStatus.COMPLETED);
+                payment.setPaymentDate(LocalDateTime.now());
+                payment.setProcessedBy("Front Desk - Auto-completed on check-in");
+                paymentRepository.save(payment);
+                System.out.println("Completed payment ID: " + payment.getId() + " for booking: " + booking.getBookingReference());
+            }
+            
+            if (pendingPayments.isEmpty()) {
+                System.out.println("No pending payments found for booking: " + booking.getBookingReference());
+            } else {
+                System.out.println("Completed " + pendingPayments.size() + " payments for booking: " + booking.getBookingReference());
+            }
+        } catch (Exception e) {
+            System.err.println("Error completing payments for booking " + booking.getBookingReference() + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Also add this method call in the processCheckIn method after bookingRepository.save(booking):
+    // completeBookingPayments(booking);
