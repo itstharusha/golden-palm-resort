@@ -44,7 +44,7 @@ public class AuthController {
             
             // Update last login time
             if (user != null) {
-                user.setLastLoginTime(java.time.LocalDateTime.now());
+                user.setLastLogin(java.time.LocalDateTime.now());
                 userRepository.save(user);
             }
 
@@ -66,8 +66,9 @@ public class AuthController {
             newUser.setPassword(passwordEncoder.encode(request.getPassword()));
             newUser.setEmail(request.getUsername() + "@example.com"); // Simple email assignment
             newUser.setFirstName(request.getUsername());
-            newUser.setLastName("User");
+            newUser.setLastName(request.getUsername()); // Use username as last name instead of hardcoded "User"
             newUser.setRole(User.UserRole.GUEST);
+            newUser.setActive(true); // Explicitly set user as active
 
             userRepository.save(newUser);
             return ResponseEntity.ok("User registered successfully");

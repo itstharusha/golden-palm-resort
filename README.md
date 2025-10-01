@@ -231,8 +231,8 @@ docker run -p 8080:8080 goldenpalm-resort
 **Project Team:** SLIIT 2025-Y2-S1-MLB-B1G2-02
 
 For technical support or questions:
-- Email: itstharusha@gmail.com
-
+- Email: support@goldenpalmresort.com
+- Phone: +94 11 234 5678
 
 ## 📄 License
 

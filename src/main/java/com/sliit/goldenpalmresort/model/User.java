@@ -17,21 +17,20 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(unique = true, nullable = false)
     private String username;
     
     @Column(unique = true, nullable = false)
     private String email;
     
     @Column(nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String password;
     
     @Column(name = "first_name", nullable = false)
     private String firstName;
-    
-    @Column(name = "last_name", nullable = false)
     private String lastName;
     
+    @Column
     private String phone;
     
     @Enumerated(EnumType.STRING)
@@ -40,14 +39,14 @@ public class User implements UserDetails {
     @Column(name = "is_active")
     private boolean isActive = true;
     
-    @Column(name = "last_login_time")
-    private LocalDateTime lastLoginTime;
-    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
     
     public User() {}
     
@@ -124,14 +123,21 @@ public class User implements UserDetails {
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
     
-    public LocalDateTime getLastLoginTime() { return lastLoginTime; }
-    public void setLastLoginTime(LocalDateTime lastLoginTime) { this.lastLoginTime = lastLoginTime; }
-    
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    public LocalDateTime getLastLogin() { return lastLogin; }
+    public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
+    
+    // Helper method to check if user is online (logged in within last 5 minutes)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public boolean isOnline() {
+        if (lastLogin == null) return false;
+        return lastLogin.isAfter(LocalDateTime.now().minusMinutes(5));
+    }
     
     public enum UserRole {
         GUEST, ADMIN, MANAGER, FRONT_DESK, PAYMENT_OFFICER

@@ -638,47 +638,110 @@ public class AdminController {
 
     // Get revenue chart data
     @GetMapping("/analytics/revenue")
-    public ResponseEntity<Map<String, Object>> getRevenueAnalytics() {
+    public ResponseEntity<Map<String, Object>> getRevenueAnalytics(
+            @RequestParam(defaultValue = "month") String period) {
         try {
             Map<String, Object> revenueData = new HashMap<>();
+            LocalDate now = LocalDate.now();
             
-            // Get monthly revenue data (last 7 months)
-            List<String> months = List.of("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+            List<String> labels = new ArrayList<>();
             List<Double> revenues = new ArrayList<>();
             
-            // Calculate actual revenue from payments by month
-            LocalDate now = LocalDate.now();
-            for (int i = 6; i >= 0; i--) {
-                LocalDate monthStart = now.minusMonths(i).withDayOfMonth(1);
-                LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
-                
-                double monthlyRevenue = paymentRepository.findAll().stream()
-                    .filter(payment -> payment.getPaymentStatus() == com.sliit.goldenpalmresort.model.Payment.PaymentStatus.COMPLETED)
-                    .filter(payment -> payment.getPaymentDate() != null)
-                    .filter(payment -> {
-                        LocalDate paymentDate = payment.getPaymentDate().toLocalDate();
-                        return !paymentDate.isBefore(monthStart) && !paymentDate.isAfter(monthEnd);
-                    })
-                    .mapToDouble(payment -> payment.getAmount().doubleValue())
-                    .sum();
+            int periodsToShow = 7; // Default for monthly view
+            
+            switch (period.toLowerCase()) {
+                case "week":
+                    // Last 7 days
+                    periodsToShow = 7;
+                    for (int i = 6; i >= 0; i--) {
+                        LocalDate day = now.minusDays(i);
+                        labels.add(day.format(java.time.format.DateTimeFormatter.ofPattern("EEE")));
+                        
+                        LocalDateTime dayStart = day.atStartOfDay();
+                        LocalDateTime dayEnd = day.atTime(23, 59, 59);
+                        
+                        double dailyRevenue = paymentRepository.findAll().stream()
+                            .filter(p -> p.getPaymentStatus() == com.sliit.goldenpalmresort.model.Payment.PaymentStatus.COMPLETED)
+                            .filter(p -> p.getPaymentDate() != null)
+                            .filter(p -> !p.getPaymentDate().isBefore(dayStart) && !p.getPaymentDate().isAfter(dayEnd))
+                            .mapToDouble(p -> p.getAmount().doubleValue())
+                            .sum();
+                        
+                        revenues.add(Math.round(dailyRevenue * 100.0) / 100.0);
+                    }
+                    break;
                     
-                revenues.add(Math.round(monthlyRevenue * 100.0) / 100.0);
+                case "year":
+                    // Last 12 months
+                    periodsToShow = 12;
+                    for (int i = 11; i >= 0; i--) {
+                        LocalDate month = now.minusMonths(i);
+                        labels.add(month.format(java.time.format.DateTimeFormatter.ofPattern("MMM yyyy")));
+                        
+                        LocalDate monthStart = month.withDayOfMonth(1);
+                        LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
+                        LocalDateTime startDateTime = monthStart.atStartOfDay();
+                        LocalDateTime endDateTime = monthEnd.atTime(23, 59, 59);
+                        
+                        double monthlyRevenue = paymentRepository.findAll().stream()
+                            .filter(p -> p.getPaymentStatus() == com.sliit.goldenpalmresort.model.Payment.PaymentStatus.COMPLETED)
+                            .filter(p -> p.getPaymentDate() != null)
+                            .filter(p -> !p.getPaymentDate().isBefore(startDateTime) && !p.getPaymentDate().isAfter(endDateTime))
+                            .mapToDouble(p -> p.getAmount().doubleValue())
+                            .sum();
+                        
+                        revenues.add(Math.round(monthlyRevenue * 100.0) / 100.0);
+                    }
+                    break;
+                    
+                default: // "month" - Last 7 months
+                    periodsToShow = 7;
+                    for (int i = 6; i >= 0; i--) {
+                        LocalDate month = now.minusMonths(i);
+                        labels.add(month.format(java.time.format.DateTimeFormatter.ofPattern("MMM")));
+                        
+                        LocalDate monthStart = month.withDayOfMonth(1);
+                        LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
+                        LocalDateTime startDateTime = monthStart.atStartOfDay();
+                        LocalDateTime endDateTime = monthEnd.atTime(23, 59, 59);
+                        
+                        double monthlyRevenue = paymentRepository.findAll().stream()
+                            .filter(p -> p.getPaymentStatus() == com.sliit.goldenpalmresort.model.Payment.PaymentStatus.COMPLETED)
+                            .filter(p -> p.getPaymentDate() != null)
+                            .filter(p -> !p.getPaymentDate().isBefore(startDateTime) && !p.getPaymentDate().isAfter(endDateTime))
+                            .mapToDouble(p -> p.getAmount().doubleValue())
+                            .sum();
+                        
+                        revenues.add(Math.round(monthlyRevenue * 100.0) / 100.0);
+                    }
             }
             
-            // Current month total
-            double currentMonthRevenue = revenues.get(revenues.size() - 1);
-            double previousMonthRevenue = revenues.size() > 1 ? revenues.get(revenues.size() - 2) : currentMonthRevenue;
-            double growthPercentage = previousMonthRevenue > 0 ? 
-                ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 : 0;
+            // Calculate growth (current vs previous period)
+            double currentRevenue = revenues.isEmpty() ? 0 : revenues.get(revenues.size() - 1);
+            double previousRevenue = revenues.size() > 1 ? revenues.get(revenues.size() - 2) : 0;
+            double growthPercentage = previousRevenue > 0 ? 
+                ((currentRevenue - previousRevenue) / previousRevenue) * 100 : 
+                (currentRevenue > 0 ? 100 : 0);
             
-            revenueData.put("labels", months);
+            // Calculate total revenue across all periods
+            double totalRevenue = revenues.stream().mapToDouble(Double::doubleValue).sum();
+            
+            // Calculate average revenue
+            double averageRevenue = revenues.isEmpty() ? 0 : totalRevenue / revenues.size();
+            
+            revenueData.put("labels", labels);
             revenueData.put("data", revenues);
-            revenueData.put("currentMonth", Math.round(currentMonthRevenue));
+            revenueData.put("currentPeriod", Math.round(currentRevenue));
+            revenueData.put("totalRevenue", Math.round(totalRevenue));
+            revenueData.put("averageRevenue", Math.round(averageRevenue));
             revenueData.put("growthPercentage", Math.round(growthPercentage * 100.0) / 100.0);
             revenueData.put("isPositiveGrowth", growthPercentage > 0);
+            revenueData.put("period", period);
+            revenueData.put("hasData", !revenues.isEmpty() && totalRevenue > 0);
             
             return ResponseEntity.ok(revenueData);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -775,9 +838,9 @@ public class AdminController {
             
             bookingData.put("labels", List.of("Confirmed", "Pending", "Checked In", "Checked Out", "Cancelled"));
             bookingData.put("data", List.of(confirmed, pending, checkedIn, checkedOut, cancelled));
-            bookingData.put("colors", List.of("#38a169", "#d69e2e", "#3182ce", "#718096", "#e53e3e"));
+            bookingData.put("colors", List.of("#38a169", "#d69e2e", "#3b82f6", "#718096", "#e53e3e"));
             bookingData.put("totalBookings", allBookings.size());
-            bookingData.put("currentGuests", checkedIn);
+            bookingData.put("currentGuests", checkedIn); // Add current guests count
             
             return ResponseEntity.ok(bookingData);
         } catch (Exception e) {
@@ -791,8 +854,8 @@ public class AdminController {
         try {
             Map<String, Object> dashboardData = new HashMap<>();
             
-            // Get all analytics in one call
-            ResponseEntity<Map<String, Object>> revenueResponse = getRevenueAnalytics();
+            // Get all analytics in one call (default to month view)
+            ResponseEntity<Map<String, Object>> revenueResponse = getRevenueAnalytics("month");
             ResponseEntity<Map<String, Object>> roomResponse = getRoomAnalytics();
             ResponseEntity<Map<String, Object>> userResponse = getUserAnalytics();
             ResponseEntity<Map<String, Object>> bookingResponse = getBookingAnalytics();

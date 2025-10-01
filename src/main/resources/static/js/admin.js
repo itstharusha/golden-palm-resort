@@ -59,6 +59,27 @@ function setupEventListeners() {
             }
         });
     });
+    
+    // Revenue period selector
+    document.querySelectorAll('.revenue-period-selector').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const period = this.getAttribute('data-period');
+            
+            // Update button text
+            const btn = document.getElementById('revenuePeriodBtn');
+            if (btn) {
+                btn.textContent = this.textContent;
+            }
+            
+            // Update active state
+            document.querySelectorAll('.revenue-period-selector').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Reload chart data with new period
+            loadChartData(period);
+        });
+    });
 }
 
 // Chart variables
@@ -117,9 +138,10 @@ async function loadStatistics() {
                 totalRoomsEl.textContent = totalRooms;
             }
             if (currentGuestsEl && analytics.bookings) {
-                // Show current checked-in guests count
-                const checkedInBookings = analytics.bookings.currentGuests || 0;
-                currentGuestsEl.textContent = checkedInBookings;
+                // Show current checked-in guests count directly from backend
+                const currentGuests = analytics.bookings.currentGuests || 0;
+                currentGuestsEl.textContent = currentGuests;
+                console.log('Current guests loaded:', currentGuests);
             }
             if (totalEventSpacesEl && analytics.eventSpaces) {
                 // Show total event spaces count
@@ -261,15 +283,13 @@ async function loadUsers() {
     }
 }
 
-// Check if user is online (logged in within last 30 minutes)
-function isUserOnline(user) {
-    if (!user.lastLoginTime) return false;
-    
-    const lastLogin = new Date(user.lastLoginTime);
+// Helper function to check if user is online (logged in within last 5 minutes)
+function isUserOnline(lastLoginStr) {
+    if (!lastLoginStr) return false;
+    const lastLogin = new Date(lastLoginStr);
     const now = new Date();
     const diffMinutes = (now - lastLogin) / (1000 * 60);
-    
-    return diffMinutes <= 30; // Online if logged in within last 30 minutes
+    return diffMinutes < 5;
 }
 
 // Display users
@@ -293,7 +313,9 @@ function displayUsers(users) {
                     <option value="GUEST" ${user.role === 'GUEST' ? 'selected' : ''}>Guest</option>
                 </select>
             </td>
-            <td><span class="badge bg-${isUserOnline(user) ? 'success' : 'secondary'}">${isUserOnline(user) ? 'Online' : 'Offline'}</span></td>
+            <td>
+                ${user.lastLogin ? `<span class="badge bg-${isUserOnline(user.lastLogin) ? 'success' : 'secondary'}">${isUserOnline(user.lastLogin) ? 'Online' : 'Offline'}</span>` : '<span class="badge bg-secondary">Offline</span>'}
+            </td>
             <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="editUser(${user.id})">
                     <i class="fas fa-edit"></i>
@@ -490,14 +512,14 @@ async function deleteBooking(bookingReference) {
 // Load reports
 function loadReports() {
     // Initialize charts with real data
-    loadChartData();
+    loadChartData('month');
 }
 
 // Load and initialize charts with real data
-async function loadChartData() {
+async function loadChartData(period = 'month') {
     try {
-        // Load revenue analytics
-        const revenueResponse = await fetch('/api/admin/analytics/revenue', {
+        // Load revenue analytics with period parameter
+        const revenueResponse = await fetch(`/api/admin/analytics/revenue?period=${period}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
@@ -528,19 +550,32 @@ async function loadChartData() {
 
 // Initialize charts with real data
 function initializeChartsWithData(revenueData, roomData) {
-    // Revenue Chart
+    // Revenue Chart - Destroy existing to prevent memory leak
     const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(revenueCtx, {
+    if (window.revenueChart) {
+        window.revenueChart.destroy();
+    }
+    
+    // Check if we have data
+    const hasData = revenueData.hasData || (revenueData.data && revenueData.data.some(v => v > 0));
+    
+    window.revenueChart = new Chart(revenueCtx, {
         type: 'line',
         data: {
-            labels: revenueData.labels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: revenueData.labels || ['No Data'],
             datasets: [{
-                label: 'Revenue ($)',
-                data: revenueData.data || [],
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                tension: 0.1,
-                fill: true
+                label: 'Revenue (LKR)',
+                data: hasData ? revenueData.data : [0],
+                borderColor: hasData ? '#f97316' : '#cbd5e1', // Orange for data, gray for no data
+                backgroundColor: hasData ? 'rgba(249, 115, 22, 0.1)' : 'rgba(203, 213, 225, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: hasData ? '#f97316' : '#cbd5e1',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: hasData ? 4 : 0,
+                pointHoverRadius: hasData ? 6 : 0
             }]
         },
         options: {
@@ -551,14 +586,48 @@ function initializeChartsWithData(revenueData, roomData) {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return '$' + value.toLocaleString();
+                            return 'LKR ' + value.toLocaleString();
+                        },
+                        color: '#64748b',
+                        font: {
+                            size: 11
                         }
+                    },
+                    grid: {
+                        color: '#f1f5f9',
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#64748b',
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        display: false
                     }
                 }
             },
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    enabled: hasData,
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#f97316',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return 'Revenue: LKR ' + context.parsed.y.toLocaleString();
+                        }
+                    }
                 }
             }
         }
@@ -648,28 +717,72 @@ function initializeEmptyCharts() {
 
 // Update revenue display elements
 function updateRevenueDisplay(revenueData) {
+    console.log('Updating revenue display with data:', revenueData); // Debug log
+    
     const totalRevenueEl = document.getElementById('totalRevenue');
     const revenueGrowthEl = document.getElementById('revenueGrowth');
     const revenueGrowthTextEl = document.getElementById('revenueGrowthText');
     
-    if (totalRevenueEl && revenueData.currentMonth) {
-        totalRevenueEl.textContent = `$${revenueData.currentMonth.toLocaleString()}`;
-    }
+    // Check if we have any data
+    const hasData = revenueData.hasData || false;
     
-    if (revenueGrowthEl && typeof revenueData.growthPercentage !== 'undefined') {
-        const growth = revenueData.growthPercentage;
-        const isPositive = revenueData.isPositiveGrowth;
-        
-        revenueGrowthEl.textContent = `${isPositive ? '+' : ''}${growth}%`;
-        revenueGrowthEl.className = `progress-value ${isPositive ? 'positive' : 'negative'}`;
-        
-        if (revenueGrowthTextEl) {
-            revenueGrowthTextEl.textContent = `This month's revenue is ${isPositive ? 'higher' : 'lower'} than last month`;
+    // Support both old (currentMonth) and new (currentPeriod) field names
+    const currentRevenue = revenueData.currentPeriod !== undefined ? revenueData.currentPeriod : 
+                          (revenueData.currentMonth !== undefined ? revenueData.currentMonth : 0);
+    
+    // Update total revenue badge
+    if (totalRevenueEl) {
+        if (!hasData || currentRevenue === 0) {
+            totalRevenueEl.textContent = 'LKR 0';
+            totalRevenueEl.style.opacity = '0.6';
+        } else {
+            totalRevenueEl.textContent = `LKR ${currentRevenue.toLocaleString()}`;
+            totalRevenueEl.style.opacity = '1';
         }
     }
+    
+    // Update growth percentage
+    if (revenueGrowthEl) {
+        if (!hasData) {
+            revenueGrowthEl.textContent = '—';
+            revenueGrowthEl.className = 'progress-value';
+            if (revenueGrowthTextEl) {
+                revenueGrowthTextEl.textContent = 'No revenue data available';
+            }
+        } else if (typeof revenueData.growthPercentage !== 'undefined') {
+            const growth = revenueData.growthPercentage;
+            const isPositive = revenueData.isPositiveGrowth;
+            
+            // Handle edge cases for growth display
+            if (growth === 0 || isNaN(growth)) {
+                revenueGrowthEl.textContent = '0%';
+                revenueGrowthEl.className = 'progress-value';
+            } else {
+                revenueGrowthEl.textContent = `${isPositive ? '+' : ''}${growth}%`;
+                revenueGrowthEl.className = `progress-value ${isPositive ? 'positive' : 'negative'}`;
+            }
+            
+            if (revenueGrowthTextEl) {
+                const periodText = revenueData.period === 'week' ? 'day' : 
+                                 (revenueData.period === 'year' ? 'month' : 'period');
+                if (growth === 0) {
+                    revenueGrowthTextEl.textContent = `No change from previous ${periodText}`;
+                } else {
+                    revenueGrowthTextEl.textContent = `Revenue is ${isPositive ? 'higher' : 'lower'} than previous ${periodText}`;
+                }
+            }
+        } else {
+            revenueGrowthEl.textContent = '—';
+            revenueGrowthEl.className = 'progress-value';
+            if (revenueGrowthTextEl) {
+                revenueGrowthTextEl.textContent = 'Calculating growth...';
+            }
+        }
+    }
+    
+    // Log success
+    console.log('Revenue display updated successfully');
 }
-
-// Modal functions
 function showAddUserModal() {
     const modal = new bootstrap.Modal(document.getElementById('addUserModal'));
     modal.show();
@@ -727,27 +840,35 @@ async function editUser(userId) {
         
         if (response.ok) {
             const user = await response.json();
+            console.log('User data loaded:', user); // Debug log
             
-            // Populate the edit form
-            document.getElementById('editUserId').value = user.id;
-            document.getElementById('editUserFirstName').value = user.firstName;
-            document.getElementById('editUserLastName').value = user.lastName;
-            document.getElementById('editUserUsername').value = user.username;
-            document.getElementById('editUserEmail').value = user.email;
+            // Populate the edit form with null checks
+            document.getElementById('editUserId').value = user.id || '';
+            document.getElementById('editUserFirstName').value = user.firstName || '';
+            document.getElementById('editUserLastName').value = user.lastName || '';
+            document.getElementById('editUserUsername').value = user.username || '';
+            document.getElementById('editUserEmail').value = user.email || '';
             document.getElementById('editUserPhone').value = user.phone || '';
-            document.getElementById('editUserRole').value = user.role;
-            document.getElementById('editUserIsActive').value = user.isActive.toString();
+            document.getElementById('editUserRole').value = user.role || 'GUEST';
+            
+            // Handle isActive field - check multiple possible field names
+            const isActiveValue = user.active !== undefined ? user.active : 
+                                 (user.isActive !== undefined ? user.isActive : true);
+            document.getElementById('editUserIsActive').value = isActiveValue.toString();
+            
             document.getElementById('editUserPassword').value = ''; // Clear password field
             
             // Show the modal
             const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
             modal.show();
         } else {
-            showAlert('Error loading user data', 'danger');
+            const errorText = await response.text();
+            console.error('Failed to load user:', response.status, errorText);
+            showAlert('Error loading user data: ' + errorText, 'danger');
         }
     } catch (error) {
         console.error('Error loading user:', error);
-        showAlert('Error loading user data', 'danger');
+        showAlert('Error loading user data: ' + error.message, 'danger');
     }
 }
 
@@ -1150,23 +1271,34 @@ async function displayRoomPhotos(roomId) {
             const container = document.getElementById('roomPhotosPreview');
             if (container) {
                 container.innerHTML = '';
-                photos.forEach(photo => {
-                    const photoDiv = document.createElement('div');
-                    photoDiv.className = 'col-md-3 mb-2';
-                    photoDiv.innerHTML = `
-                        <div class="card">
-                            <img src="/api/photos/${photo.id}/download" class="card-img-top" style="height: 100px; object-fit: cover;">
-                            <div class="card-body p-2">
-                                <small class="text-muted">${photo.originalFileName}</small>
+                if (photos.length === 0) {
+                    container.innerHTML = '<div class="col-12"><p class="text-muted text-center">No photos uploaded yet</p></div>';
+                } else {
+                    photos.forEach(photo => {
+                        const photoDiv = document.createElement('div');
+                        photoDiv.className = 'col-md-3 mb-2';
+                        photoDiv.innerHTML = `
+                            <div class="card">
+                                <img src="/api/photos/${photo.id}/download" class="card-img-top" style="height: 100px; object-fit: cover;" alt="${photo.originalFileName}">
+                                <div class="card-body p-2">
+                                    <small class="text-muted d-block mb-1">${photo.originalFileName || 'Photo'}</small>
+                                    <button class="btn btn-sm btn-danger w-100" onclick="deletePhoto(${photo.id})">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                    container.appendChild(photoDiv);
-                });
+                        `;
+                        container.appendChild(photoDiv);
+                    });
+                }
             }
         }
     } catch (error) {
         console.error('Error loading room photos:', error);
+        const container = document.getElementById('roomPhotosPreview');
+        if (container) {
+            container.innerHTML = '<div class="col-12"><p class="text-danger text-center">Error loading photos</p></div>';
+        }
     }
 }
 
@@ -1474,11 +1606,12 @@ async function deletePhoto(photoId) {
             
             if (response.ok) {
                 showAlert('Photo deleted successfully!', 'success');
+                // Refresh the photo display in the edit modal
                 if (currentRoomId) {
-                    loadRoomPhotos(currentRoomId);
+                    await loadRoomPhotos(currentRoomId);
                 }
                 if (currentEventSpaceId) {
-                    loadEventSpacePhotos(currentEventSpaceId);
+                    await loadEventSpacePhotos(currentEventSpaceId);
                 }
             } else {
                 showAlert('Error deleting photo', 'danger');
@@ -1586,71 +1719,19 @@ async function initializeRevenueChart() {
             // Update the amount badge
             const amountBadge = document.querySelector('.amount-badge');
             if (amountBadge) {
-                amountBadge.textContent = `$${revenueData.currentMonth.toLocaleString()}`;
+                const currentRevenue = revenueData.currentPeriod !== undefined ? revenueData.currentPeriod : revenueData.currentMonth;
+                amountBadge.textContent = currentRevenue !== undefined ? `LKR ${currentRevenue.toLocaleString()}` : 'LKR 0';
             }
 
             // Update growth percentage
             const progressValue = document.querySelector('.progress-value');
-            if (progressValue) {
+            if (progressValue && typeof revenueData.growthPercentage !== 'undefined') {
                 const sign = revenueData.isPositiveGrowth ? '+' : '';
                 progressValue.textContent = `${sign}${revenueData.growthPercentage}%`;
             }
 
-            // Create the chart
-            revenueChart = new Chart(revenueCtx, {
-                type: 'line',
-                data: {
-                    labels: revenueData.labels,
-                    datasets: [{
-                        label: 'Revenue ($)',
-                        data: revenueData.data,
-                        borderColor: '#e53e3e',
-                        backgroundColor: 'rgba(229, 62, 62, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#e53e3e',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(45, 55, 72, 0.9)',
-                            titleColor: '#ffffff',
-                            bodyColor: '#ffffff',
-                            borderColor: '#e53e3e',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function(context) {
-                                    return `Revenue: $${context.parsed.y.toLocaleString()}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            display: false
-                        },
-                        y: {
-                            display: false
-                        }
-                    },
-                    elements: {
-                        point: {
-                            hoverRadius: 8
-                        }
-                    }
-                }
-            });
+            // Create the chart with the updated function
+            initializeChartsWithData(revenueData, null);
             console.log('Revenue chart initialized with backend data');
         } else {
             throw new Error('Failed to load revenue data');
