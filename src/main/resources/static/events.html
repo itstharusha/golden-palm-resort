@@ -233,6 +233,22 @@
             padding: 25px;
         }
         
+        .event-card .card-body h5,
+        .event-card .card-body .card-title {
+            color: #1a1a1a !important;
+            font-weight: 600;
+        }
+        
+        .event-card .card-body p,
+        .event-card .card-body .card-text,
+        .event-card .card-body small {
+            color: #4a4a4a !important;
+        }
+        
+        .event-card .card-body .text-muted {
+            color: #666 !important;
+        }
+        
         .price-tag {
             background: var(--primary-color);
             color: white;
@@ -244,11 +260,15 @@
         
         .capacity-badge {
             background: var(--secondary-color);
-            color: white;
+            color: white !important;
             padding: 5px 12px;
             border-radius: 15px;
             font-size: 0.8rem;
             margin-right: 10px;
+        }
+        
+        .event-card .capacity-badge i {
+            color: white !important;
         }
         
         .amenity-icon {
@@ -327,12 +347,28 @@
         .modal-content {
             border-radius: 15px;
             border: none;
+            background-color: white;
         }
         
         .modal-header {
             background: var(--primary-color);
             color: white;
             border-radius: 15px 15px 0 0;
+        }
+        
+        .modal-body {
+            color: #333;
+        }
+        
+        .modal-body h6 {
+            color: #333;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .modal-body p {
+            color: #666;
         }
         
         .feature-icon {
@@ -878,7 +914,29 @@
         // Book an event space from modal
         function bookEventSpace() {
             if (window.currentEventSpaceId) {
-                bookEventSpaceById(window.currentEventSpaceId);
+                // Close the event space details modal
+                const detailsModal = bootstrap.Modal.getInstance(document.getElementById('eventSpaceDetailsModal'));
+                if (detailsModal) {
+                    detailsModal.hide();
+                }
+                
+                // Scroll to the search/booking form
+                setTimeout(() => {
+                    const searchSection = document.getElementById('search');
+                    if (searchSection) {
+                        searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    
+                    // Highlight the form briefly
+                    const searchCard = document.querySelector('.card');
+                    if (searchCard) {
+                        searchCard.style.boxShadow = '0 0 30px rgba(212, 175, 55, 0.6)';
+                        searchCard.style.transition = 'box-shadow 0.3s ease';
+                        setTimeout(() => {
+                            searchCard.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                        }, 2000);
+                    }
+                }, 300);
             }
         }
 
@@ -977,12 +1035,22 @@
 
                 if (response.ok) {
                     const booking = await response.json();
+                    console.log('Event booking created successfully:', booking);
+                    
                     // Redirect to payment page for event booking
                     const amount = booking.totalAmount || 0;
-                    window.location.href = `/payment.html?type=event&ref=${encodeURIComponent(booking.bookingReference)}&amount=${encodeURIComponent(amount)}`;
+                    const paymentUrl = `/payment.html?type=event&ref=${encodeURIComponent(booking.bookingReference)}&amount=${encodeURIComponent(amount)}`;
+                    console.log('Redirecting to payment page:', paymentUrl);
+                    
+                    showAlert('Booking created successfully! Redirecting to payment...', 'success');
+                    setTimeout(() => {
+                        window.location.href = paymentUrl;
+                    }, 1500);
                 } else {
+                    console.error('Event booking failed with status:', response.status);
                     const text = await response.text();
-                    showAlert('Booking failed. ' + (text || 'Please check your inputs and try again.'), 'danger');
+                    console.error('Booking error:', text);
+                    showAlert('Booking failed: ' + (text || 'Please check your inputs and try again.'), 'danger');
                 }
             } catch (error) {
                 console.error('Error creating booking:', error);

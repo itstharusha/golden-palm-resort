@@ -769,13 +769,15 @@ public class AdminController {
             // Count bookings by status
             long confirmed = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.CONFIRMED).count();
             long pending = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.PENDING).count();
-            long cancelled = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.CANCELLED).count();
+            long checkedIn = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.CHECKED_IN).count();
             long checkedOut = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.CHECKED_OUT).count();
+            long cancelled = allBookings.stream().filter(booking -> booking.getStatus() == Booking.BookingStatus.CANCELLED).count();
             
-            bookingData.put("labels", List.of("Confirmed", "Pending", "Cancelled", "Completed"));
-            bookingData.put("data", List.of(confirmed, pending, cancelled, checkedOut));
-            bookingData.put("colors", List.of("#38a169", "#d69e2e", "#e53e3e", "#718096"));
+            bookingData.put("labels", List.of("Confirmed", "Pending", "Checked In", "Checked Out", "Cancelled"));
+            bookingData.put("data", List.of(confirmed, pending, checkedIn, checkedOut, cancelled));
+            bookingData.put("colors", List.of("#38a169", "#d69e2e", "#3182ce", "#718096", "#e53e3e"));
             bookingData.put("totalBookings", allBookings.size());
+            bookingData.put("currentGuests", checkedIn);
             
             return ResponseEntity.ok(bookingData);
         } catch (Exception e) {

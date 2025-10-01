@@ -32,7 +32,6 @@ public class User implements UserDetails {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @Column
     private String phone;
     
     @Enumerated(EnumType.STRING)
@@ -40,6 +39,9 @@ public class User implements UserDetails {
     
     @Column(name = "is_active")
     private boolean isActive = true;
+    
+    @Column(name = "last_login_time")
+    private LocalDateTime lastLoginTime;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -121,6 +123,9 @@ public class User implements UserDetails {
     
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
+    
+    public LocalDateTime getLastLoginTime() { return lastLoginTime; }
+    public void setLastLoginTime(LocalDateTime lastLoginTime) { this.lastLoginTime = lastLoginTime; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

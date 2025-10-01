@@ -401,10 +401,30 @@
         }
         
         .card-text {
-            color: var(--text-muted);
+            color: #d1d5db;
             font-size: 0.95rem;
             line-height: 1.6;
             margin-bottom: 1.5rem;
+        }
+        
+        .room-card .card-body p,
+        .room-card .card-body small,
+        .room-card .card-body .text-muted {
+            color: #d1d5db !important;
+        }
+        
+        .room-card .card-body h5,
+        .room-card .card-body h6 {
+            color: var(--text-light) !important;
+        }
+        
+        .room-card .card-body ul li {
+            color: #d1d5db !important;
+            margin-bottom: 0.5rem;
+        }
+        
+        .room-card .card-body ul li i {
+            color: var(--primary-color);
         }
         
         .price-tag {
@@ -611,6 +631,21 @@
             color: var(--text-light);
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
+        }
+        
+        .modal-body {
+            color: var(--text-light);
+        }
+        
+        .modal-body h6 {
+            color: var(--text-light);
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .modal-body p {
+            color: #d1d5db;
         }
         
         .btn-close {
@@ -1148,7 +1183,16 @@
         // Book a room from modal
         function bookRoom() {
             if (window.currentRoomId) {
-                bookRoomById(window.currentRoomId);
+                // Close the room details modal
+                const detailsModal = bootstrap.Modal.getInstance(document.getElementById('roomDetailsModal'));
+                if (detailsModal) {
+                    detailsModal.hide();
+                }
+                
+                // Wait for modal to close, then create booking
+                setTimeout(() => {
+                    bookRoomById(window.currentRoomId);
+                }, 300);
             }
         }
 
@@ -1189,15 +1233,28 @@
 
                 if (response.ok) {
                     const booking = await response.json();
+                    console.log('Booking created successfully:', booking);
+                    
                     // Redirect to payment page with booking reference and amount
                     const amount = booking.totalAmount || 0;
-                    window.location.href = `/payment.html?type=room&ref=${encodeURIComponent(booking.bookingReference)}&amount=${encodeURIComponent(amount)}`;
+                    const paymentUrl = `/payment.html?type=room&ref=${encodeURIComponent(booking.bookingReference)}&amount=${encodeURIComponent(amount)}`;
+                    console.log('Redirecting to payment page:', paymentUrl);
+                    
+                    showAlert('Booking created successfully! Redirecting to payment...', 'success');
+                    setTimeout(() => {
+                        window.location.href = paymentUrl;
+                    }, 1500);
                 } else {
+                    console.error('Booking failed with status:', response.status);
                     if (response.status === 401) {
-                        showAlert('Please login at /login.html and then try booking again.', 'warning');
+                        showAlert('Please login to make a booking. Redirecting to login...', 'warning');
+                        setTimeout(() => {
+                            window.location.href = '/login.html';
+                        }, 2000);
                     } else if (response.status === 400) {
                         const text = await response.text();
-                        showAlert('Booking failed. ' + (text || 'Please check your inputs and try again.'), 'danger');
+                        console.error('Booking error:', text);
+                        showAlert('Booking failed: ' + (text || 'Please check your inputs and try again.'), 'danger');
                     } else {
                         showAlert('Booking failed. Please try again.', 'danger');
                     }

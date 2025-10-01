@@ -104,7 +104,7 @@ async function loadStatistics() {
             // Update elements if they exist
             const totalUsersEl = document.getElementById('totalUsers');
             const totalRoomsEl = document.getElementById('totalRooms');
-            const totalBookingsEl = document.getElementById('totalBookings');
+            const currentGuestsEl = document.getElementById('currentGuests');
             const totalEventSpacesEl = document.getElementById('totalEventSpaces');
             const occupancyValueEl = document.querySelector('.summary-value');
             
@@ -116,10 +116,10 @@ async function loadStatistics() {
                 const totalRooms = analytics.rooms.totalRooms || 12;
                 totalRoomsEl.textContent = totalRooms;
             }
-            if (totalBookingsEl && analytics.bookings) {
-                // Show pending bookings count
-                const pendingBookings = analytics.bookings.data[1] || 8; // Second element is pending bookings
-                totalBookingsEl.textContent = pendingBookings;
+            if (currentGuestsEl && analytics.bookings) {
+                // Show current checked-in guests count
+                const checkedInBookings = analytics.bookings.currentGuests || 0;
+                currentGuestsEl.textContent = checkedInBookings;
             }
             if (totalEventSpacesEl && analytics.eventSpaces) {
                 // Show total event spaces count
@@ -129,7 +129,6 @@ async function loadStatistics() {
             if (occupancyValueEl && analytics.rooms && typeof analytics.rooms.occupancyRate !== 'undefined') {
                 occupancyValueEl.textContent = `${Math.round(analytics.rooms.occupancyRate)}%`;
             }
-            
             console.log('Statistics loaded successfully from analytics');
         } else {
             console.log('Analytics API not available, showing error state');
@@ -145,13 +144,13 @@ async function loadStatistics() {
 function setErrorStatistics() {
     const totalUsersEl = document.getElementById('totalUsers');
     const totalRoomsEl = document.getElementById('totalRooms');
-    const totalBookingsEl = document.getElementById('totalBookings');
+    const currentGuestsEl = document.getElementById('currentGuests');
     const totalEventSpacesEl = document.getElementById('totalEventSpaces');
     const totalRevenueEl = document.getElementById('totalRevenue');
     
     if (totalUsersEl) totalUsersEl.textContent = 'N/A';
     if (totalRoomsEl) totalRoomsEl.textContent = 'N/A';
-    if (totalBookingsEl) totalBookingsEl.textContent = 'N/A';
+    if (currentGuestsEl) currentGuestsEl.textContent = 'N/A';
     if (totalEventSpacesEl) totalEventSpacesEl.textContent = 'N/A';
     if (totalRevenueEl) totalRevenueEl.textContent = 'N/A';
     
@@ -262,6 +261,17 @@ async function loadUsers() {
     }
 }
 
+// Check if user is online (logged in within last 30 minutes)
+function isUserOnline(user) {
+    if (!user.lastLoginTime) return false;
+    
+    const lastLogin = new Date(user.lastLoginTime);
+    const now = new Date();
+    const diffMinutes = (now - lastLogin) / (1000 * 60);
+    
+    return diffMinutes <= 30; // Online if logged in within last 30 minutes
+}
+
 // Display users
 function displayUsers(users) {
     const tbody = document.getElementById('usersTable');
@@ -283,7 +293,7 @@ function displayUsers(users) {
                     <option value="GUEST" ${user.role === 'GUEST' ? 'selected' : ''}>Guest</option>
                 </select>
             </td>
-            <td><span class="badge bg-${user.isActive ? 'success' : 'danger'}">${user.isActive ? 'Active' : 'Inactive'}</span></td>
+            <td><span class="badge bg-${isUserOnline(user) ? 'success' : 'secondary'}">${isUserOnline(user) ? 'Online' : 'Offline'}</span></td>
             <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="editUser(${user.id})">
                     <i class="fas fa-edit"></i>
@@ -1094,15 +1104,28 @@ async function loadRoomDetails(roomId) {
         
         if (response.ok) {
             const room = await response.json();
+            console.log('Loading room details:', room);
+            
             document.getElementById('roomId').value = room.id;
-            document.getElementById('roomNumber').value = room.roomNumber;
-            document.getElementById('roomType').value = room.roomType;
-            document.getElementById('roomFloor').value = room.floorNumber;
-            document.getElementById('roomCapacity').value = room.capacity;
-            document.getElementById('roomPrice').value = room.basePrice;
+            document.getElementById('roomNumber').value = room.roomNumber || '';
+            document.getElementById('roomFloor').value = room.floorNumber || '';
+            document.getElementById('roomCapacity').value = room.capacity || '';
+            document.getElementById('roomPrice').value = room.basePrice || '';
             document.getElementById('roomDescription').value = room.description || '';
             document.getElementById('roomAmenities').value = room.amenities || '';
-            document.getElementById('roomStatus').value = room.status;
+            
+            // Set room type with explicit selection
+            const roomTypeSelect = document.getElementById('roomType');
+            if (room.roomType) {
+                roomTypeSelect.value = room.roomType;
+                console.log('Set roomType to:', room.roomType);
+            }
+            
+            // Set status
+            const roomStatusSelect = document.getElementById('roomStatus');
+            if (room.status) {
+                roomStatusSelect.value = room.status;
+            }
             
             // Load existing photos for display
             await displayRoomPhotos(roomId);
@@ -1193,6 +1216,14 @@ async function updateRoom() {
         // Remove roomId from the data as it's not needed in the request body
         delete roomData.roomId;
         
+        // Ensure roomType is set
+        if (!roomData.roomType) {
+            showAlert('Room type is required', 'danger');
+            return;
+        }
+        
+        console.log('Updating room with data:', roomData);
+        
         const response = await fetch(`/api/admin/rooms/${currentRoomId}`, {
             method: 'PUT',
             headers: {
@@ -1210,12 +1241,13 @@ async function updateRoom() {
             bootstrap.Modal.getInstance(document.getElementById('roomManagementModal')).hide();
             loadRooms();
         } else {
-            const error = await response.json();
-            showAlert(error.message || 'Error updating room', 'danger');
+            const errorText = await response.text();
+            console.error('Update error:', errorText);
+            showAlert('Error updating room: ' + errorText, 'danger');
         }
     } catch (error) {
         console.error('Error updating room:', error);
-        showAlert('Error updating room', 'danger');
+        showAlert('Error updating room: ' + error.message, 'danger');
     }
 }
 

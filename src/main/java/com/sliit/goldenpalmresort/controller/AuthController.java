@@ -41,6 +41,12 @@ public class AuthController {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String token = jwtService.generateToken(userDetails.getUsername());
             User user = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
+            
+            // Update last login time
+            if (user != null) {
+                user.setLastLoginTime(java.time.LocalDateTime.now());
+                userRepository.save(user);
+            }
 
             return ResponseEntity.ok(new LoginResponse(token, user, "Login successful", true));
         } catch (Exception e) {
