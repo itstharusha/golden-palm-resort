@@ -855,7 +855,7 @@ public class AdminController {
             Map<String, Object> dashboardData = new HashMap<>();
             
             // Get all analytics in one call (default to month view)
-            ResponseEntity<Map<String, Object>> revenueResponse = getRevenueAnalytics("month");
+            ResponseEntity<Map<String, Object>> revenueResponse =       getRevenueAnalytics("month");
             ResponseEntity<Map<String, Object>> roomResponse = getRoomAnalytics();
             ResponseEntity<Map<String, Object>> userResponse = getUserAnalytics();
             ResponseEntity<Map<String, Object>> bookingResponse = getBookingAnalytics();

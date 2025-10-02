@@ -919,24 +919,33 @@
                 if (detailsModal) {
                     detailsModal.hide();
                 }
-                
-                // Scroll to the search/booking form
+
+                // Set the selected event space and open booking modal
+                selectedEventSpace = window.currentEventSpaceId;
+
+                // Open the booking modal after modal closes
                 setTimeout(() => {
-                    const searchSection = document.getElementById('search');
-                    if (searchSection) {
-                        searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                    
-                    // Highlight the form briefly
-                    const searchCard = document.querySelector('.card');
-                    if (searchCard) {
-                        searchCard.style.boxShadow = '0 0 30px rgba(212, 175, 55, 0.6)';
-                        searchCard.style.transition = 'box-shadow 0.3s ease';
-                        setTimeout(() => {
-                            searchCard.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-                        }, 2000);
+                    const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+                    bookingModal.show();
+
+                    // Pre-fill form with current search data if available
+                    const eventDate = document.getElementById('eventDate').value;
+                    const startTime = document.getElementById('startTime').value;
+                    const endTime = document.getElementById('endTime').value;
+                    const expectedGuests = document.getElementById('expectedGuests').value;
+
+                    if (eventDate && startTime && endTime && expectedGuests) {
+                        // Form is already filled, just show confirmation
+                        showAlert('Please review and confirm your booking details.', 'info');
+                    } else {
+                        // Prompt user to fill the search form first
+                        showAlert('Please fill in the event details in the search form above.', 'info');
+                        // Scroll to search form
+                        document.getElementById('search').scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 }, 300);
+            } else {
+                showAlert('Please select an event space first.', 'warning');
             }
         }
 
@@ -970,6 +979,12 @@
             const cateringRequired = document.getElementById('cateringRequired').checked;
             const audioVisualRequired = document.getElementById('audioVisualRequired').checked;
             const specialRequests = document.getElementById('specialRequests').value;
+
+            // Validate event space is selected
+            if (!selectedEventSpace) {
+                showAlert('Please select an event space first.', 'warning');
+                return;
+            }
 
             // Client-side validations to match backend constraints
             if (!contactPerson || !contactPhone) {
@@ -1036,12 +1051,18 @@
                 if (response.ok) {
                     const booking = await response.json();
                     console.log('Event booking created successfully:', booking);
-                    
+
+                    // Close booking modal
+                    const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
+                    if (bookingModal) {
+                        bookingModal.hide();
+                    }
+
                     // Redirect to payment page for event booking
                     const amount = booking.totalAmount || 0;
                     const paymentUrl = `/payment.html?type=event&ref=${encodeURIComponent(booking.bookingReference)}&amount=${encodeURIComponent(amount)}`;
                     console.log('Redirecting to payment page:', paymentUrl);
-                    
+
                     showAlert('Booking created successfully! Redirecting to payment...', 'success');
                     setTimeout(() => {
                         window.location.href = paymentUrl;
@@ -1262,7 +1283,7 @@
                         <div class="col-md-4">
                             <div class="card">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title">$<span id="eventSpaceModalPrice">0</span>/day</h5>
+                                    <h5 class="card-title">LKR <span id="eventSpaceModalPrice">0</span>/day</h5>
                                     <p class="text-muted" id="eventSpaceModalName">Event Space</p>
                                     <button class="btn btn-primary btn-lg w-100" onclick="bookEventSpace()">
                                         <i class="fas fa-calendar-check"></i> Book Now

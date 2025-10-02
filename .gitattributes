@@ -1,2 +1,40 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+
+# GitHub Linguist Configuration
+# Force Java as the primary language
+*.java linguist-language=Java
+*.html linguist-language=HTML
+*.css linguist-language=CSS
+*.js linguist-language=JavaScript
+
+# Mark configuration files appropriately
+pom.xml linguist-language=XML
+*.yml linguist-language=YAML
+*.yaml linguist-language=YAML
+*.json linguist-language=JSON
+
+# Documentation files
+*.md linguist-documentation=true
+README.md linguist-documentation=true
+*.txt linguist-documentation=true
+
+# Exclude test and build artifacts from language stats
+target/** linguist-generated=true
+*.class linguist-generated=true
+*.jar linguist-generated=true
+*.war linguist-generated=true
+*.ear linguist-generated=true
+
+# IDE files
+.idea/** linguist-generated=true
+vscode/** linguist-generated=true
+*.iml linguist-generated=true
+
+# Maven wrapper
+mvnw linguist-language=Shell
+mvnw.cmd linguist-language=Batchfile
+
+# Configuration files
+gitattributes linguist-language=Git Attributes
+gitignore linguist-language=Ignore List

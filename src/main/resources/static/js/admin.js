@@ -246,7 +246,7 @@ function displayRecentBookings(bookings) {
                 </div>
                 <div class="project-details">
                     <h6>${booking.guestName} - ${booking.type}</h6>
-                    <span class="project-rate">${booking.totalAmount ? `$${Number(booking.totalAmount).toLocaleString()}` : booking.checkInDate}</span>
+                    <span class="project-rate">${booking.totalAmount ? `LKR ${Number(booking.totalAmount).toLocaleString()}` : booking.checkInDate}</span>
                     <div class="project-tags">
                         <span class="tag ${statusClass === 'success' ? 'confirmed' : statusClass === 'warning' ? 'pending' : ''}">${booking.status}</span>
                     </div>
