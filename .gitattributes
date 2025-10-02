@@ -1,40 +1,46 @@
+# GitHub Linguist Configuration - Enhanced for Java Project
+
+# Force Java as primary language and exclude non-source files from detection
+*.java linguist-language=Java linguist-detectable=true
+*.html linguist-language=HTML linguist-detectable=false
+*.css linguist-language=CSS linguist-detectable=false
+*.js linguist-language=JavaScript linguist-detectable=false
+
+# Build and configuration files
+pom.xml linguist-language=XML linguist-detectable=true
+*.properties linguist-language=Properties linguist-detectable=false
+*.yml linguist-language=YAML linguist-detectable=false
+*.yaml linguist-language=YAML linguist-detectable=false
+*.json linguist-language=JSON linguist-detectable=false
+
+# Documentation (should not count toward language stats)
+*.md linguist-documentation=true linguist-detectable=false
+README.md linguist-documentation=true linguist-detectable=false
+*.txt linguist-documentation=true linguist-detectable=false
+HELP.md linguist-documentation=true linguist-detectable=false
+TECHNICAL_SPECIFICATION.md linguist-documentation=true linguist-detectable=false
+
+# Generated files and build artifacts (exclude from language detection)
+target/** linguist-generated=true linguist-detectable=false
+*.class linguist-generated=true linguist-detectable=false
+*.jar linguist-generated=true linguist-detectable=false
+*.war linguist-generated=true linguist-detectable=false
+*.ear linguist-generated=true linguist-detectable=false
+
+# IDE and development files
+.idea/** linguist-generated=true linguist-detectable=false
+.vscode/** linguist-generated=true linguist-detectable=false
+*.iml linguist-generated=true linguist-detectable=false
+.settings/** linguist-generated=true linguist-detectable=false
+
+# Scripts and wrappers
+mvnw linguist-language=Shell linguist-detectable=false
+mvnw.cmd linguist-language=Batchfile linguist-detectable=false
+
+# Git files
+gitattributes linguist-language=Git-Attributes linguist-detectable=false
+gitignore linguist-language=Ignore-List linguist-detectable=false
+
+# Line endings for cross-platform compatibility
 /mvnw text eol=lf
 *.cmd text eol=crlf
-
-# GitHub Linguist Configuration
-# Force Java as the primary language
-*.java linguist-language=Java
-*.html linguist-language=HTML
-*.css linguist-language=CSS
-*.js linguist-language=JavaScript
-
-# Mark configuration files appropriately
-pom.xml linguist-language=XML
-*.yml linguist-language=YAML
-*.yaml linguist-language=YAML
-*.json linguist-language=JSON
-
-# Documentation files
-*.md linguist-documentation=true
-README.md linguist-documentation=true
-*.txt linguist-documentation=true
-
-# Exclude test and build artifacts from language stats
-target/** linguist-generated=true
-*.class linguist-generated=true
-*.jar linguist-generated=true
-*.war linguist-generated=true
-*.ear linguist-generated=true
-
-# IDE files
-.idea/** linguist-generated=true
-vscode/** linguist-generated=true
-*.iml linguist-generated=true
-
-# Maven wrapper
-mvnw linguist-language=Shell
-mvnw.cmd linguist-language=Batchfile
-
-# Configuration files
-gitattributes linguist-language=Git Attributes
-gitignore linguist-language=Ignore List
