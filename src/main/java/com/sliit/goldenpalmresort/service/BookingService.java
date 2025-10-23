@@ -4,10 +4,12 @@ import com.sliit.goldenpalmresort.dto.BookingRequest;
 import com.sliit.goldenpalmresort.dto.BookingResponse;
 import com.sliit.goldenpalmresort.exception.ResourceNotFoundException;
 import com.sliit.goldenpalmresort.model.Booking;
+import com.sliit.goldenpalmresort.model.Payment;
 import com.sliit.goldenpalmresort.model.Room;
 import com.sliit.goldenpalmresort.model.User;
 import com.sliit.goldenpalmresort.model.Booking.BookingStatus;
 import com.sliit.goldenpalmresort.repository.BookingRepository;
+import com.sliit.goldenpalmresort.repository.PaymentRepository;
 import com.sliit.goldenpalmresort.repository.RoomRepository;
 import com.sliit.goldenpalmresort.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -27,11 +30,14 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
 
-    public BookingService(BookingRepository bookingRepository, RoomRepository roomRepository, UserRepository userRepository) {
+    public BookingService(BookingRepository bookingRepository, RoomRepository roomRepository, 
+                         UserRepository userRepository, PaymentRepository paymentRepository) {
         this.bookingRepository = bookingRepository;
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     @Transactional
@@ -79,6 +85,19 @@ public class BookingService {
         booking.setCreatedBy(currentUser);
         
         Booking savedBooking = bookingRepository.save(booking);
+        
+        // Create a COMPLETED payment for this booking
+        Payment payment = new Payment();
+        payment.setBooking(savedBooking);
+        payment.setAmount(totalAmount);
+        payment.setPaymentMethod(Payment.PaymentMethod.CREDIT_CARD); // Default payment method
+        payment.setPaymentStatus(Payment.PaymentStatus.COMPLETED);
+        payment.setPaymentDate(LocalDateTime.now()); // Set payment date to now
+        payment.setTransactionId("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        payment.setProcessedBy(currentUser.getUsername());
+        payment.setNotes("Payment processed for booking " + savedBooking.getBookingReference());
+        paymentRepository.save(payment);
+        
         return BookingResponse.from(savedBooking);
     }
     

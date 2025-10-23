@@ -362,65 +362,8 @@
         
         .revenue-chart-container {
             position: relative;
-            height: 250px;
-        }
-        
-        .amount-badge {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #2d3748;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 16px;
-            z-index: 10;
-        }
-        
-        .weekly-progress {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        
-        .progress-indicator .progress-value {
-            font-size: 32px;
-            font-weight: 800;
-            color: #2d3748;
-            display: block;
-            line-height: 1;
-        }
-        
-        .progress-indicator small {
-            color: #718096;
-            font-size: 13px;
-        }
-        
-        .week-days {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .week-days .day {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #f7fafc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 600;
-            color: #a0aec0;
-        }
-        
-        .week-days .day.active {
-            background: #2d3748;
-            color: white;
+            height: 280px;
+            margin-bottom: 20px;
         }
         
         /* Stats Row */
@@ -834,45 +777,25 @@
                                     <!-- Revenue Tracker - Main Feature -->
                                     <div class="card revenue-tracker">
                                         <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start mb-4">
-                                                <div>
-                                                    <h3 class="card-title">Revenue Tracker</h3>
-                                                    <p class="card-subtitle">Track changes in revenue over time and access detailed data on each booking and payments received</p>
-                                                </div>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" id="revenuePeriodBtn">
-                                                        Month
-                                                    </button>
-                                                    <ul class="dropdown-menu">
-                                                        <li><a class="dropdown-item revenue-period-selector" href="#" data-period="week">Week</a></li>
-                                                        <li><a class="dropdown-item revenue-period-selector active" href="#" data-period="month">Month</a></li>
-                                                        <li><a class="dropdown-item revenue-period-selector" href="#" data-period="year">Year</a></li>
-                                                    </ul>
-                                                </div>
+                                            <div class="mb-4">
+                                                <h3 class="card-title">Weekly Revenue</h3>
+                                                <p class="card-subtitle">Daily income breakdown for the current week</p>
                                             </div>
                                             
                                             <!-- Revenue Chart Area -->
                                             <div class="revenue-chart-container">
-                                                <div class="revenue-amount">
-                                                    <span class="amount-badge" id="totalRevenue">$—</span>
+                                                <canvas id="revenueChart" height="220"></canvas>
+                                            </div>
+                                            
+                                            <!-- Weekly Summary -->
+                                            <div class="mt-3 d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <small class="text-muted">Total Weekly Revenue</small>
+                                                    <h4 class="mb-0" id="totalWeeklyRevenue">LKR 0</h4>
                                                 </div>
-                                                <canvas id="revenueChart" height="200"></canvas>
-                                                
-                                                <!-- Weekly Progress -->
-                                                <div class="weekly-progress">
-                                                    <div class="progress-indicator">
-                                                        <span class="progress-value" id="revenueGrowth">—%</span>
-                                                        <small id="revenueGrowthText">Loading revenue data...</small>
-                                                    </div>
-                                                    <div class="week-days">
-                                                        <span class="day">S</span>
-                                                        <span class="day">M</span>
-                                                        <span class="day active">T</span>
-                                                        <span class="day">W</span>
-                                                        <span class="day">T</span>
-                                                        <span class="day">F</span>
-                                                        <span class="day">S</span>
-                                                    </div>
+                                                <div class="text-end">
+                                                    <small class="text-muted">Average Daily</small>
+                                                    <h5 class="mb-0" id="averageDailyRevenue">LKR 0</h5>
                                                 </div>
                                             </div>
                                         </div>

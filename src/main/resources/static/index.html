@@ -10,14 +10,14 @@
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@300;400;500;600;700&display=swap');
         
         :root {
-            --primary-color: #806A57;
-            --secondary-color: #292E2A;
-            --accent-color: #101E1F;
-            --light-bg: #E5DFE1;
-            --dark-bg: #292E2A;
-            --text-light: #E5DFE1;
-            --text-muted: #A49C91;
-            --border-color: #806A57;
+            --primary-color: #B8956A;
+            --secondary-color: #2A2522;
+            --accent-color: #1A1614;
+            --light-bg: #F5F1ED;
+            --dark-bg: #2A2522;
+            --text-light: #F5F1ED;
+            --text-muted: #B8956A;
+            --border-color: #B8956A;
         }
         
         * {
@@ -41,11 +41,17 @@
         }
         
         .navbar {
-            background: rgba(255, 255, 255, 0.1) !important;
+            background: rgba(42, 37, 34, 0.95) !important;
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1.5rem 0;
+            border-bottom: 1px solid rgba(184, 149, 106, 0.2);
+            padding: 1rem 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .navbar.scrolled {
+            background: rgba(42, 37, 34, 0.98) !important;
+            padding: 0.75rem 0;
         }
         
         .navbar-brand {
@@ -63,36 +69,47 @@
         }
         
         .navbar-nav .nav-link {
-            color: white !important;
-            font-weight: 400;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            margin: 0 1.5rem;
-            padding: 0.5rem 0 !important;
+            color: rgba(245, 241, 237, 0.85) !important;
+            font-weight: 500;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
+            margin: 0 1rem;
+            padding: 0.5rem 1rem !important;
             transition: all 0.3s ease;
             position: relative;
             text-transform: uppercase;
+            border-radius: 6px;
         }
         
         .navbar-nav .nav-link::after {
             content: '';
             position: absolute;
-            bottom: 0;
-            left: 0;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
             width: 0;
-            height: 1px;
-            background: white;
+            height: 2px;
+            background: var(--primary-color);
             transition: width 0.3s ease;
         }
         
-        .navbar-nav .nav-link:hover::after,
-        .navbar-nav .nav-link.active::after {
-            width: 100%;
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+            background: rgba(184, 149, 106, 0.1);
         }
         
-        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link:hover::after {
+            width: 60%;
+        }
+        
         .navbar-nav .nav-link.active {
-            color: white !important;
+            color: var(--primary-color) !important;
+            background: rgba(184, 149, 106, 0.15);
+            font-weight: 600;
+        }
+        
+        .navbar-nav .nav-link.active::after {
+            width: 60%;
         }
         
         .hero-section {
@@ -333,7 +350,7 @@
         
         .section-title p {
             font-size: 1.1rem;
-            color: var(--text-muted);
+            color: rgba(245, 241, 237, 0.7);
             font-weight: 300;
         }
         
@@ -401,37 +418,20 @@
         }
         
         .card-text {
-<<<<<<< HEAD
-            color: #d1d5db;
+            color: rgba(245, 241, 237, 0.85);
             font-size: 0.95rem;
             line-height: 1.6;
             margin-bottom: 1.5rem;
         }
         
-        .room-card .card-body p,
-        .room-card .card-body small,
-        .room-card .card-body .text-muted {
-            color: #d1d5db !important;
-        }
-        
-        .room-card .card-body h5,
-        .room-card .card-body h6 {
-            color: var(--text-light) !important;
-        }
-        
-        .room-card .card-body ul li {
-            color: #d1d5db !important;
+        .room-card .list-unstyled li {
+            color: rgba(245, 241, 237, 0.8);
+            font-size: 0.9rem;
             margin-bottom: 0.5rem;
         }
         
-        .room-card .card-body ul li i {
+        .room-card .list-unstyled li i {
             color: var(--primary-color);
-=======
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
->>>>>>> origin/main
         }
         
         .price-tag {
@@ -512,7 +512,7 @@
         }
         
         .feature-item p {
-            color: var(--text-muted);
+            color: rgba(245, 241, 237, 0.75);
             font-size: 0.95rem;
             line-height: 1.7;
             position: relative;
@@ -534,12 +534,12 @@
         }
         
         .footer p, .footer li {
-            color: var(--text-muted);
+            color: rgba(245, 241, 237, 0.7);
             font-size: 0.95rem;
         }
         
         .footer a {
-            color: var(--text-muted);
+            color: rgba(245, 241, 237, 0.7);
             text-decoration: none;
             transition: color 0.3s ease;
         }
@@ -549,7 +549,7 @@
         }
         
         .social-links a {
-            color: var(--text-muted);
+            color: rgba(245, 241, 237, 0.7);
             margin-right: 1rem;
             font-size: 1.3rem;
             transition: all 0.3s ease;
@@ -590,11 +590,34 @@
             border-left: 4px solid #17a2b8;
         }
         
+        .navbar-toggler {
+            border: 2px solid var(--primary-color);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-toggler:hover {
+            background: rgba(184, 149, 106, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.25rem rgba(184, 149, 106, 0.25);
+        }
+        
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28184, 149, 106, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
         .dropdown-menu {
-            background-color: var(--accent-color);
-            border: 2px solid var(--border-color);
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            background: rgba(42, 37, 34, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(184, 149, 106, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             animation: dropdownSlide 0.3s ease-out;
         }
         
@@ -612,15 +635,43 @@
         .dropdown-item {
             color: var(--text-light);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 10px;
-            margin: 5px;
-            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 0.25rem 0;
+            padding: 0.6rem 1rem;
         }
         
         .dropdown-item:hover {
-            background: linear-gradient(135deg, var(--primary-color), #f4d03f);
-            color: white;
+            background: rgba(184, 149, 106, 0.2);
+            color: var(--primary-color);
             transform: translateX(5px);
+        }
+        
+        .dropdown-divider {
+            border-color: rgba(184, 149, 106, 0.2);
+            margin: 0.5rem 0;
+        }
+        
+        @media (max-width: 991px) {
+            .navbar-nav {
+                padding: 1rem 0;
+            }
+            
+            .navbar-nav .nav-link {
+                margin: 0.25rem 0;
+                padding: 0.75rem 1rem !important;
+            }
+            
+            .navbar-nav .nav-link::after {
+                display: none;
+            }
+            
+            .navbar-collapse {
+                background: rgba(42, 37, 34, 0.98);
+                border-radius: 12px;
+                margin-top: 1rem;
+                padding: 1rem;
+                border: 1px solid rgba(184, 149, 106, 0.2);
+            }
         }
         
         .modal-content {
@@ -640,7 +691,6 @@
             font-weight: 600;
         }
         
-<<<<<<< HEAD
         .modal-body {
             color: var(--text-light);
         }
@@ -656,8 +706,6 @@
             color: #d1d5db;
         }
         
-=======
->>>>>>> origin/main
         .btn-close {
             filter: invert(1);
         }
@@ -944,8 +992,16 @@
             });
         }
 
-        // Parallax effect
+        // Navbar scroll effect
         window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+            
+            // Parallax effect
             const scrolled = window.pageYOffset;
             const parallax = document.querySelector('.hero-section');
             const speed = scrolled * 0.5;

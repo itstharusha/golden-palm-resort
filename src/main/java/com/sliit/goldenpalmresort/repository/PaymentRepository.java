@@ -1,5 +1,7 @@
 package com.sliit.goldenpalmresort.repository;
 
+import com.sliit.goldenpalmresort.model.Booking;
+import com.sliit.goldenpalmresort.model.EventBooking;
 import com.sliit.goldenpalmresort.model.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
@@ -63,4 +66,10 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     // Find payments with refunds
     @Query("SELECT p FROM Payment p WHERE p.refundAmount IS NOT NULL AND p.refundAmount > 0")
     List<Payment> findPaymentsWithRefunds();
+    
+    // Find payment by booking
+    Optional<Payment> findByBooking(Booking booking);
+    
+    // Find payment by event booking
+    Optional<Payment> findByEventBooking(EventBooking eventBooking);
 } 

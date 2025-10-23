@@ -764,10 +764,35 @@ public class AdminController {
             roomData.put("data", List.of(availableRooms, occupiedRooms, maintenanceRooms, outOfOrderRooms));
             roomData.put("colors", List.of("#38a169", "#3182ce", "#d69e2e", "#e53e3e"));
             
-            // Calculate occupancy rate
+            // Calculate current occupancy rate
             long totalActiveRooms = availableRooms + occupiedRooms;
             double occupancyRate = totalActiveRooms > 0 ? (double) occupiedRooms / totalActiveRooms * 100 : 0;
             roomData.put("occupancyRate", Math.round(occupancyRate * 100.0) / 100.0);
+            
+            // Calculate last week's occupancy rate
+            LocalDate today = LocalDate.now();
+            LocalDate lastWeekStart = today.minusWeeks(1);
+            LocalDate lastWeekEnd = today.minusDays(1);
+            
+            // Get bookings from last week that were checked in
+            List<Booking> lastWeekBookings = bookingRepository.findByCheckInDateBetween(lastWeekStart, lastWeekEnd);
+            long lastWeekOccupiedRooms = lastWeekBookings.stream()
+                .filter(booking -> booking.getStatus() == Booking.BookingStatus.CHECKED_IN || 
+                                   booking.getStatus() == Booking.BookingStatus.CHECKED_OUT)
+                .count();
+            
+            double lastWeekOccupancyRate = totalActiveRooms > 0 ? (double) lastWeekOccupiedRooms / totalActiveRooms * 100 : 0;
+            
+            // Calculate percentage change
+            double occupancyChange = 0;
+            if (lastWeekOccupancyRate > 0) {
+                occupancyChange = ((occupancyRate - lastWeekOccupancyRate) / lastWeekOccupancyRate) * 100;
+            } else if (occupancyRate > 0) {
+                occupancyChange = 100; // If last week was 0 and current is > 0, show 100% increase
+            }
+            
+            roomData.put("occupancyChange", Math.round(occupancyChange * 100.0) / 100.0);
+            roomData.put("lastWeekOccupancyRate", Math.round(lastWeekOccupancyRate * 100.0) / 100.0);
             
             // Add total room count
             roomData.put("totalRooms", allRooms.size());

@@ -59,27 +59,6 @@ function setupEventListeners() {
             }
         });
     });
-    
-    // Revenue period selector
-    document.querySelectorAll('.revenue-period-selector').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const period = this.getAttribute('data-period');
-            
-            // Update button text
-            const btn = document.getElementById('revenuePeriodBtn');
-            if (btn) {
-                btn.textContent = this.textContent;
-            }
-            
-            // Update active state
-            document.querySelectorAll('.revenue-period-selector').forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Reload chart data with new period
-            loadChartData(period);
-        });
-    });
 }
 
 // Chart variables
@@ -150,6 +129,24 @@ async function loadStatistics() {
             }
             if (occupancyValueEl && analytics.rooms && typeof analytics.rooms.occupancyRate !== 'undefined') {
                 occupancyValueEl.textContent = `${Math.round(analytics.rooms.occupancyRate)}%`;
+            }
+            
+            // Update occupancy change from analytics
+            const occupancyChangeEl = document.getElementById('occupancyChange');
+            if (occupancyChangeEl && analytics.rooms && typeof analytics.rooms.occupancyChange !== 'undefined') {
+                const change = analytics.rooms.occupancyChange;
+                const changeText = change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
+                occupancyChangeEl.textContent = changeText;
+                
+                // Add color class based on positive/negative change
+                occupancyChangeEl.classList.remove('text-success', 'text-danger', 'text-muted');
+                if (change > 0) {
+                    occupancyChangeEl.classList.add('text-success');
+                } else if (change < 0) {
+                    occupancyChangeEl.classList.add('text-danger');
+                } else {
+                    occupancyChangeEl.classList.add('text-muted');
+                }
             }
             console.log('Statistics loaded successfully from analytics');
         } else {
@@ -550,32 +547,55 @@ async function loadChartData(period = 'month') {
 
 // Initialize charts with real data
 function initializeChartsWithData(revenueData, roomData) {
+    // Validate revenueData
+    if (!revenueData || typeof revenueData !== 'object') {
+        console.error('Invalid revenue data provided to initializeChartsWithData');
+        return;
+    }
+
     // Revenue Chart - Destroy existing to prevent memory leak
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    if (window.revenueChart) {
+    const revenueCtx = document.getElementById('revenueChart')?.getContext('2d');
+    if (!revenueCtx) {
+        console.error('Revenue chart canvas not found');
+        return;
+    }
+
+    if (window.revenueChart && typeof window.revenueChart.destroy === 'function') {
         window.revenueChart.destroy();
+        window.revenueChart = null;
     }
     
     // Check if we have data
     const hasData = revenueData.hasData || (revenueData.data && revenueData.data.some(v => v > 0));
     
     window.revenueChart = new Chart(revenueCtx, {
-        type: 'line',
+        type: 'bar',
         data: {
-            labels: revenueData.labels || ['No Data'],
+            labels: revenueData.labels || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
             datasets: [{
-                label: 'Revenue (LKR)',
-                data: hasData ? revenueData.data : [0],
-                borderColor: hasData ? '#f97316' : '#cbd5e1', // Orange for data, gray for no data
-                backgroundColor: hasData ? 'rgba(249, 115, 22, 0.1)' : 'rgba(203, 213, 225, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: hasData ? '#f97316' : '#cbd5e1',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: hasData ? 4 : 0,
-                pointHoverRadius: hasData ? 6 : 0
+                label: 'Daily Revenue (LKR)',
+                data: hasData ? revenueData.data : [0, 0, 0, 0, 0, 0, 0],
+                backgroundColor: hasData ? [
+                    'rgba(239, 68, 68, 0.8)',   // Monday - Red
+                    'rgba(249, 115, 22, 0.8)',  // Tuesday - Orange
+                    'rgba(234, 179, 8, 0.8)',   // Wednesday - Yellow
+                    'rgba(34, 197, 94, 0.8)',   // Thursday - Green
+                    'rgba(59, 130, 246, 0.8)',  // Friday - Blue
+                    'rgba(168, 85, 247, 0.8)',  // Saturday - Purple
+                    'rgba(236, 72, 153, 0.8)'   // Sunday - Pink
+                ] : 'rgba(203, 213, 225, 0.5)',
+                borderColor: hasData ? [
+                    'rgb(239, 68, 68)',
+                    'rgb(249, 115, 22)',
+                    'rgb(234, 179, 8)',
+                    'rgb(34, 197, 94)',
+                    'rgb(59, 130, 246)',
+                    'rgb(168, 85, 247)',
+                    'rgb(236, 72, 153)'
+                ] : 'rgb(203, 213, 225)',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
             }]
         },
         options: {
@@ -616,16 +636,26 @@ function initializeChartsWithData(revenueData, roomData) {
                 },
                 tooltip: {
                     enabled: hasData,
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
                     titleColor: '#ffffff',
                     bodyColor: '#ffffff',
-                    borderColor: '#f97316',
-                    borderWidth: 1,
-                    padding: 12,
-                    displayColors: false,
+                    borderColor: 'rgba(229, 62, 62, 0.8)',
+                    borderWidth: 2,
+                    padding: 16,
+                    displayColors: true,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
                     callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
                         label: function(context) {
-                            return 'Revenue: LKR ' + context.parsed.y.toLocaleString();
+                            return 'Daily Revenue: LKR ' + context.parsed.y.toLocaleString();
                         }
                     }
                 }
@@ -633,32 +663,36 @@ function initializeChartsWithData(revenueData, roomData) {
         }
     });
 
-    // Occupancy Chart
-    const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
-    new Chart(occupancyCtx, {
-        type: 'doughnut',
-        data: {
-            labels: roomData.labels || ['Available', 'Occupied', 'Maintenance', 'Out of Order'],
-            datasets: [{
-                data: roomData.data || [0, 0, 0, 0],
-                backgroundColor: roomData.colors || [
-                    'rgb(54, 162, 235)',
-                    'rgb(255, 99, 132)', 
-                    'rgb(255, 205, 86)',
-                    'rgb(75, 192, 192)'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
+    // Occupancy Chart - Only initialize if roomData is provided
+    if (roomData) {
+        const occupancyCtx = document.getElementById('occupancyChart')?.getContext('2d');
+        if (occupancyCtx) {
+            new Chart(occupancyCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: roomData.labels || ['Available', 'Occupied', 'Maintenance', 'Out of Order'],
+                    datasets: [{
+                        data: roomData.data || [0, 0, 0, 0],
+                        backgroundColor: roomData.colors || [
+                            'rgb(54, 162, 235)',
+                            'rgb(255, 99, 132)', 
+                            'rgb(255, 205, 86)',
+                            'rgb(75, 192, 192)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
                 }
-            }
+            });
         }
-    });
+    }
 }
 
 // Initialize empty charts when data is unavailable
@@ -666,14 +700,16 @@ function initializeEmptyCharts() {
     // Revenue Chart - Empty state
     const revenueCtx = document.getElementById('revenueChart').getContext('2d');
     new Chart(revenueCtx, {
-        type: 'line',
+        type: 'bar',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
             datasets: [{
-                label: 'Revenue (No Data)',
-                data: [],
-                borderColor: 'rgb(200, 200, 200)',
-                tension: 0.1
+                label: 'Daily Revenue (No Data)',
+                data: [0, 0, 0, 0, 0, 0, 0],
+                backgroundColor: 'rgba(203, 213, 225, 0.5)',
+                borderColor: 'rgb(203, 213, 225)',
+                borderWidth: 2,
+                borderRadius: 8
             }]
         },
         options: {
@@ -681,7 +717,12 @@ function initializeEmptyCharts() {
             maintainAspectRatio: false,
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'LKR ' + value.toLocaleString();
+                        }
+                    }
                 }
             },
             plugins: {
@@ -800,6 +841,11 @@ function showAddEventSpaceModal() {
 
 // Add user
 async function addUser() {
+    // Validate form before submission
+    if (!validateAddUserForm()) {
+        return;
+    }
+    
     const form = document.getElementById('addUserForm');
     const formData = new FormData(form);
     const userData = Object.fromEntries(formData.entries());
@@ -874,6 +920,11 @@ async function editUser(userId) {
 
 // Update user
 async function updateUser() {
+    // Validate form before submission
+    if (!validateEditUserForm()) {
+        return;
+    }
+    
     const form = document.getElementById('editUserForm');
     const formData = new FormData(form);
     const userData = Object.fromEntries(formData.entries());
@@ -913,6 +964,11 @@ async function updateUser() {
 
 // Add room with file uploads
 async function addRoom() {
+    // Validate form before submission
+    if (!validateAddRoomForm()) {
+        return;
+    }
+    
     const form = document.getElementById('addRoomForm');
     const formData = new FormData(form);
     const roomData = Object.fromEntries(formData.entries());
@@ -1026,6 +1082,11 @@ async function uploadEventSpacePhotos(eventSpaceId, fileInputIds) {
 
 // Add event space with file uploads
 async function addEventSpace() {
+    // Validate form before submission
+    if (!validateAddEventSpaceForm()) {
+        return;
+    }
+    
     const form = document.getElementById('addEventSpaceForm');
     const formData = new FormData(form);
     const eventSpaceData = Object.fromEntries(formData.entries());
@@ -1341,6 +1402,11 @@ function displayRoomPhotos(photos) {
 }
 
 async function updateRoom() {
+    // Validate form before submission
+    if (!validateRoomUpdateForm()) {
+        return;
+    }
+    
     try {
         const formData = new FormData(document.getElementById('roomUpdateForm'));
         const roomData = Object.fromEntries(formData.entries());
@@ -1490,6 +1556,11 @@ function displayEventSpacePhotos(photos) {
 }
 
 async function updateEventSpace() {
+    // Validate form before submission
+    if (!validateEventSpaceUpdateForm()) {
+        return;
+    }
+    
     try {
         const formData = new FormData(document.getElementById('eventSpaceUpdateForm'));
         const eventSpaceData = Object.fromEntries(formData.entries());
@@ -1706,34 +1777,42 @@ async function initializeRevenueChart() {
     }
 
     try {
-        const response = await fetch('/api/admin/analytics/revenue', {
+        // Fetch WEEKLY data for daily breakdown
+        const response = await fetch('/api/admin/analytics/revenue?period=week', {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
         });
 
+        console.log('Revenue API response status:', response.status);
+
         if (response.ok) {
             const revenueData = await response.json();
-            console.log('Revenue data loaded from backend:', revenueData);
+            console.log('Weekly revenue data loaded from backend:', revenueData);
 
-            // Update the amount badge
-            const amountBadge = document.querySelector('.amount-badge');
-            if (amountBadge) {
-                const currentRevenue = revenueData.currentPeriod !== undefined ? revenueData.currentPeriod : revenueData.currentMonth;
-                amountBadge.textContent = currentRevenue !== undefined ? `LKR ${currentRevenue.toLocaleString()}` : 'LKR 0';
+            // Validate response data structure
+            if (!revenueData || !revenueData.labels || !revenueData.data) {
+                console.warn('Invalid revenue data structure from API, using fallback');
+                throw new Error('Invalid revenue data structure');
             }
 
-            // Update growth percentage
-            const progressValue = document.querySelector('.progress-value');
-            if (progressValue && typeof revenueData.growthPercentage !== 'undefined') {
-                const sign = revenueData.isPositiveGrowth ? '+' : '';
-                progressValue.textContent = `${sign}${revenueData.growthPercentage}%`;
+            // Update total weekly revenue
+            const totalWeeklyRevenue = document.getElementById('totalWeeklyRevenue');
+            if (totalWeeklyRevenue && revenueData.totalRevenue !== undefined) {
+                totalWeeklyRevenue.textContent = `LKR ${Math.round(revenueData.totalRevenue).toLocaleString()}`;
+            }
+
+            // Update average daily revenue
+            const averageDailyRevenue = document.getElementById('averageDailyRevenue');
+            if (averageDailyRevenue && revenueData.averageRevenue !== undefined) {
+                averageDailyRevenue.textContent = `LKR ${Math.round(revenueData.averageRevenue).toLocaleString()}`;
             }
 
             // Create the chart with the updated function
             initializeChartsWithData(revenueData, null);
-            console.log('Revenue chart initialized with backend data');
+            console.log('Revenue chart initialized with weekly backend data');
         } else {
+            console.warn(`Revenue API returned status ${response.status}`);
             throw new Error('Failed to load revenue data');
         }
     } catch (error) {
@@ -1805,25 +1884,67 @@ function initializeFallbackCharts() {
 
 function initializeFallbackRevenueChart() {
     const revenueCtx = document.getElementById('revenueChart')?.getContext('2d');
-    if (!revenueCtx) return;
+    if (!revenueCtx) {
+        console.error('Revenue chart canvas not found for fallback');
+        return;
+    }
 
-    revenueChart = new Chart(revenueCtx, {
-        type: 'line',
+    // Destroy existing chart if it exists
+    if (window.revenueChart) {
+        if (typeof window.revenueChart.destroy === 'function') {
+            try {
+                window.revenueChart.destroy();
+            } catch (e) {
+                console.warn('Error destroying existing chart:', e);
+            }
+        }
+        window.revenueChart = null;
+    }
+
+    // Sample weekly data
+    const sampleData = [45000, 52000, 48000, 61000, 73000, 89000, 67000];
+    const totalRevenue = sampleData.reduce((a, b) => a + b, 0);
+    const averageRevenue = totalRevenue / sampleData.length;
+
+    // Update summary fields with sample data
+    const totalWeeklyRevenue = document.getElementById('totalWeeklyRevenue');
+    if (totalWeeklyRevenue) {
+        totalWeeklyRevenue.textContent = `LKR ${totalRevenue.toLocaleString()}`;
+    }
+
+    const averageDailyRevenue = document.getElementById('averageDailyRevenue');
+    if (averageDailyRevenue) {
+        averageDailyRevenue.textContent = `LKR ${Math.round(averageRevenue).toLocaleString()}`;
+    }
+
+    window.revenueChart = new Chart(revenueCtx, {
+        type: 'bar',
         data: {
-            labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
             datasets: [{
-                label: 'Revenue ($)',
-                data: [1200, 1900, 3000, 2500, 2200, 3000, 2567],
-                borderColor: '#e53e3e',
-                backgroundColor: 'rgba(229, 62, 62, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#e53e3e',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6
+                label: 'Daily Revenue (LKR)',
+                data: sampleData,
+                backgroundColor: [
+                    'rgba(239, 68, 68, 0.8)',
+                    'rgba(249, 115, 22, 0.8)',
+                    'rgba(234, 179, 8, 0.8)',
+                    'rgba(34, 197, 94, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(168, 85, 247, 0.8)',
+                    'rgba(236, 72, 153, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(239, 68, 68)',
+                    'rgb(249, 115, 22)',
+                    'rgb(234, 179, 8)',
+                    'rgb(34, 197, 94)',
+                    'rgb(59, 130, 246)',
+                    'rgb(168, 85, 247)',
+                    'rgb(236, 72, 153)'
+                ],
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
             }]
         },
         options: {
@@ -1871,6 +1992,24 @@ async function initializeOccupancyChart() {
             const summaryValue = document.querySelector('.summary-value');
             if (summaryValue) {
                 summaryValue.textContent = `${Math.round(roomData.occupancyRate)}%`;
+            }
+            
+            // Update occupancy change display
+            const occupancyChangeEl = document.getElementById('occupancyChange');
+            if (occupancyChangeEl && typeof roomData.occupancyChange !== 'undefined') {
+                const change = roomData.occupancyChange;
+                const changeText = change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
+                occupancyChangeEl.textContent = changeText;
+                
+                // Add color class based on positive/negative change
+                occupancyChangeEl.classList.remove('text-success', 'text-danger', 'text-muted');
+                if (change > 0) {
+                    occupancyChangeEl.classList.add('text-success');
+                } else if (change < 0) {
+                    occupancyChangeEl.classList.add('text-danger');
+                } else {
+                    occupancyChangeEl.classList.add('text-muted');
+                }
             }
 
             // Create occupancy chart
@@ -2152,4 +2291,507 @@ async function loadBookingStatusData() {
     } catch (error) {
         console.error('Error loading booking status data:', error);
     }
-} 
+}
+
+// ==================== FORM VALIDATION FUNCTIONS ====================
+
+// Validation utility functions
+const ValidationUtils = {
+    // Email validation
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    },
+    
+    // Phone validation (supports multiple formats)
+    isValidPhone(phone) {
+        if (!phone) return true; // Phone is optional
+        const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
+        return phoneRegex.test(phone);
+    },
+    
+    // Username validation (alphanumeric, underscore, 3-20 chars)
+    isValidUsername(username) {
+        const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+        return usernameRegex.test(username);
+    },
+    
+    // Password validation (min 8 chars, at least one letter and one number)
+    isValidPassword(password) {
+        if (password.length < 8) return false;
+        const hasLetter = /[a-zA-Z]/.test(password);
+        const hasNumber = /\d/.test(password);
+        return hasLetter && hasNumber;
+    },
+    
+    // Name validation (letters, spaces, hyphens only)
+    isValidName(name) {
+        const nameRegex = /^[a-zA-Z\s\-]{2,50}$/;
+        return nameRegex.test(name);
+    },
+    
+    // Number validation (positive numbers only)
+    isPositiveNumber(value) {
+        const num = parseFloat(value);
+        return !isNaN(num) && num > 0;
+    },
+    
+    // Integer validation
+    isPositiveInteger(value) {
+        const num = parseInt(value);
+        return !isNaN(num) && num > 0 && Number.isInteger(num);
+    },
+    
+    // Room number validation (alphanumeric, 1-10 chars)
+    isValidRoomNumber(roomNumber) {
+        const roomRegex = /^[A-Z0-9\-]{1,10}$/i;
+        return roomRegex.test(roomNumber);
+    },
+    
+    // Show validation error
+    showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        
+        // Remove existing error
+        this.clearFieldError(fieldId);
+        
+        // Add error styling
+        field.classList.add('is-invalid');
+        
+        // Create error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback';
+        errorDiv.textContent = message;
+        errorDiv.id = `${fieldId}-error`;
+        field.parentNode.appendChild(errorDiv);
+    },
+    
+    // Clear validation error
+    clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        
+        field.classList.remove('is-invalid');
+        const existingError = document.getElementById(`${fieldId}-error`);
+        if (existingError) {
+            existingError.remove();
+        }
+    },
+    
+    // Clear all errors in a form
+    clearFormErrors(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        
+        form.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        form.querySelectorAll('.invalid-feedback').forEach(error => {
+            error.remove();
+        });
+    }
+};
+
+// Validate Add User Form
+function validateAddUserForm() {
+    ValidationUtils.clearFormErrors('addUserForm');
+    let isValid = true;
+    
+    // First Name
+    const firstName = document.getElementById('addUserFirstName').value.trim();
+    if (!firstName) {
+        ValidationUtils.showFieldError('addUserFirstName', 'First name is required');
+        isValid = false;
+    } else if (!ValidationUtils.isValidName(firstName)) {
+        ValidationUtils.showFieldError('addUserFirstName', 'First name must contain only letters, spaces, and hyphens (2-50 characters)');
+        isValid = false;
+    }
+    
+    // Last Name
+    const lastName = document.getElementById('addUserLastName').value.trim();
+    if (!lastName) {
+        ValidationUtils.showFieldError('addUserLastName', 'Last name is required');
+        isValid = false;
+    } else if (!ValidationUtils.isValidName(lastName)) {
+        ValidationUtils.showFieldError('addUserLastName', 'Last name must contain only letters, spaces, and hyphens (2-50 characters)');
+        isValid = false;
+    }
+    
+    // Username
+    const username = document.getElementById('addUserUsername').value.trim();
+    if (!username) {
+        ValidationUtils.showFieldError('addUserUsername', 'Username is required');
+        isValid = false;
+    } else if (!ValidationUtils.isValidUsername(username)) {
+        ValidationUtils.showFieldError('addUserUsername', 'Username must be 3-20 characters (letters, numbers, underscore only)');
+        isValid = false;
+    }
+    
+    // Email
+    const email = document.getElementById('addUserEmail').value.trim();
+    if (!email) {
+        ValidationUtils.showFieldError('addUserEmail', 'Email is required');
+        isValid = false;
+    } else if (!ValidationUtils.isValidEmail(email)) {
+        ValidationUtils.showFieldError('addUserEmail', 'Please enter a valid email address');
+        isValid = false;
+    }
+    
+    // Phone (optional but validate if provided)
+    const phone = document.getElementById('addUserPhone').value.trim();
+    if (phone && !ValidationUtils.isValidPhone(phone)) {
+        ValidationUtils.showFieldError('addUserPhone', 'Please enter a valid phone number (at least 10 digits)');
+        isValid = false;
+    }
+    
+    // Password
+    const password = document.getElementById('addUserPassword').value;
+    if (!password) {
+        ValidationUtils.showFieldError('addUserPassword', 'Password is required');
+        isValid = false;
+    } else if (!ValidationUtils.isValidPassword(password)) {
+        ValidationUtils.showFieldError('addUserPassword', 'Password must be at least 8 characters with at least one letter and one number');
+        isValid = false;
+    }
+    
+    // Role
+    const role = document.getElementById('addUserRole').value;
+    if (!role) {
+        ValidationUtils.showFieldError('addUserRole', 'Please select a role');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+// Validate Edit User Form
+function validateEditUserForm() {
+    ValidationUtils.clearFormErrors('editUserForm');
+    let isValid = true;
+    
+    // First Name
+    const firstName = document.getElementById('editUserFirstName').value.trim();
+    if (!firstName) {
+        ValidationUtils.showFieldError('editUserFirstName', 'First name is required');
+        isValid = false;
+    } else if (!ValidationUtils.isValidName(firstName)) {
+        ValidationUtils.showFieldError('editUserFirstName', 'First name must contain only letters, spaces, and hyphens (2-50 characters)');
+        isValid = false;
+    }
+    
+    // Last Name
+    const lastName = document.getElementById('editUserLastName').value.trim();
+    if (!lastName) {
+        ValidationUtils.showFieldError('editUserLastName', 'Last name is required');
+        isValid = false;
+    } else if (!ValidationUtils.isValidName(lastName)) {
+        ValidationUtils.showFieldError('editUserLastName', 'Last name must contain only letters, spaces, and hyphens (2-50 characters)');
+        isValid = false;
+    }
+    
+    // Username
+    const username = document.getElementById('editUserUsername').value.trim();
+    if (!username) {
+        ValidationUtils.showFieldError('editUserUsername', 'Username is required');
+        isValid = false;
+    } else if (!ValidationUtils.isValidUsername(username)) {
+        ValidationUtils.showFieldError('editUserUsername', 'Username must be 3-20 characters (letters, numbers, underscore only)');
+        isValid = false;
+    }
+    
+    // Email
+    const email = document.getElementById('editUserEmail').value.trim();
+    if (!email) {
+        ValidationUtils.showFieldError('editUserEmail', 'Email is required');
+        isValid = false;
+    } else if (!ValidationUtils.isValidEmail(email)) {
+        ValidationUtils.showFieldError('editUserEmail', 'Please enter a valid email address');
+        isValid = false;
+    }
+    
+    // Phone (optional but validate if provided)
+    const phone = document.getElementById('editUserPhone').value.trim();
+    if (phone && !ValidationUtils.isValidPhone(phone)) {
+        ValidationUtils.showFieldError('editUserPhone', 'Please enter a valid phone number (at least 10 digits)');
+        isValid = false;
+    }
+    
+    // Password (optional for edit, but validate if provided)
+    const password = document.getElementById('editUserPassword').value;
+    if (password && !ValidationUtils.isValidPassword(password)) {
+        ValidationUtils.showFieldError('editUserPassword', 'Password must be at least 8 characters with at least one letter and one number');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+// Validate Add Room Form
+function validateAddRoomForm() {
+    ValidationUtils.clearFormErrors('addRoomForm');
+    let isValid = true;
+    
+    // Get form fields by name attribute
+    const form = document.getElementById('addRoomForm');
+    const roomNumber = form.querySelector('[name="roomNumber"]').value.trim();
+    const floorNumber = form.querySelector('[name="floorNumber"]').value;
+    const capacity = form.querySelector('[name="capacity"]').value;
+    const basePrice = form.querySelector('[name="basePrice"]').value;
+    const roomType = form.querySelector('[name="roomType"]').value;
+    
+    // Room Number
+    if (!roomNumber) {
+        showAlert('Room number is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isValidRoomNumber(roomNumber)) {
+        showAlert('Room number must be alphanumeric (1-10 characters)', 'danger');
+        isValid = false;
+    }
+    
+    // Floor Number
+    if (!floorNumber) {
+        showAlert('Floor number is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveInteger(floorNumber)) {
+        showAlert('Floor number must be a positive integer', 'danger');
+        isValid = false;
+    } else if (parseInt(floorNumber) > 50) {
+        showAlert('Floor number cannot exceed 50', 'danger');
+        isValid = false;
+    }
+    
+    // Capacity
+    if (!capacity) {
+        showAlert('Capacity is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveInteger(capacity)) {
+        showAlert('Capacity must be a positive integer', 'danger');
+        isValid = false;
+    } else if (parseInt(capacity) > 20) {
+        showAlert('Capacity cannot exceed 20 guests', 'danger');
+        isValid = false;
+    }
+    
+    // Base Price
+    if (!basePrice) {
+        showAlert('Base price is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveNumber(basePrice)) {
+        showAlert('Base price must be a positive number', 'danger');
+        isValid = false;
+    } else if (parseFloat(basePrice) > 1000000) {
+        showAlert('Base price seems unreasonably high', 'danger');
+        isValid = false;
+    }
+    
+    // Room Type
+    if (!roomType) {
+        showAlert('Please select a room type', 'danger');
+        isValid = false;
+    }
+    
+    // Validate image files if any are selected
+    const photoInputs = ['roomPhoto1', 'roomPhoto2', 'roomPhoto3', 'roomPhoto4'];
+    for (const inputId of photoInputs) {
+        const input = document.getElementById(inputId);
+        if (input && input.files.length > 0) {
+            const file = input.files[0];
+            
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                showAlert(`${inputId}: Please select a valid image file`, 'danger');
+                isValid = false;
+            }
+            
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert(`${inputId}: Image size must be less than 5MB`, 'danger');
+                isValid = false;
+            }
+        }
+    }
+    
+    return isValid;
+}
+
+// Validate Add Event Space Form
+function validateAddEventSpaceForm() {
+    ValidationUtils.clearFormErrors('addEventSpaceForm');
+    let isValid = true;
+    
+    // Get form fields by name attribute
+    const form = document.getElementById('addEventSpaceForm');
+    const name = form.querySelector('[name="name"]').value.trim();
+    const capacity = form.querySelector('[name="capacity"]').value;
+    const basePrice = form.querySelector('[name="basePrice"]').value;
+    const floorNumber = form.querySelector('[name="floorNumber"]').value;
+    
+    // Name
+    if (!name) {
+        showAlert('Event space name is required', 'danger');
+        isValid = false;
+    } else if (name.length < 3 || name.length > 100) {
+        showAlert('Event space name must be between 3 and 100 characters', 'danger');
+        isValid = false;
+    }
+    
+    // Capacity
+    if (!capacity) {
+        showAlert('Capacity is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveInteger(capacity)) {
+        showAlert('Capacity must be a positive integer', 'danger');
+        isValid = false;
+    } else if (parseInt(capacity) > 5000) {
+        showAlert('Capacity cannot exceed 5000 people', 'danger');
+        isValid = false;
+    }
+    
+    // Base Price
+    if (!basePrice) {
+        showAlert('Base price is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveNumber(basePrice)) {
+        showAlert('Base price must be a positive number', 'danger');
+        isValid = false;
+    } else if (parseFloat(basePrice) > 10000000) {
+        showAlert('Base price seems unreasonably high', 'danger');
+        isValid = false;
+    }
+    
+    // Floor Number
+    if (!floorNumber) {
+        showAlert('Floor number is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveInteger(floorNumber)) {
+        showAlert('Floor number must be a positive integer', 'danger');
+        isValid = false;
+    } else if (parseInt(floorNumber) > 50) {
+        showAlert('Floor number cannot exceed 50', 'danger');
+        isValid = false;
+    }
+    
+    // Validate image files if any are selected
+    const photoInputs = ['eventSpacePhoto1', 'eventSpacePhoto2', 'eventSpacePhoto3', 'eventSpacePhoto4'];
+    for (const inputId of photoInputs) {
+        const input = document.getElementById(inputId);
+        if (input && input.files.length > 0) {
+            const file = input.files[0];
+            
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                showAlert(`${inputId}: Please select a valid image file`, 'danger');
+                isValid = false;
+            }
+            
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert(`${inputId}: Image size must be less than 5MB`, 'danger');
+                isValid = false;
+            }
+        }
+    }
+    
+    return isValid;
+}
+
+// Validate Room Update Form
+function validateRoomUpdateForm() {
+    ValidationUtils.clearFormErrors('roomUpdateForm');
+    let isValid = true;
+    
+    const form = document.getElementById('roomUpdateForm');
+    const roomNumber = form.querySelector('[name="roomNumber"]').value.trim();
+    const floorNumber = form.querySelector('[name="floorNumber"]').value;
+    const capacity = form.querySelector('[name="capacity"]').value;
+    const basePrice = form.querySelector('[name="basePrice"]').value;
+    
+    // Room Number
+    if (!roomNumber) {
+        showAlert('Room number is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isValidRoomNumber(roomNumber)) {
+        showAlert('Room number must be alphanumeric (1-10 characters)', 'danger');
+        isValid = false;
+    }
+    
+    // Floor Number
+    if (!floorNumber) {
+        showAlert('Floor number is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveInteger(floorNumber)) {
+        showAlert('Floor number must be a positive integer', 'danger');
+        isValid = false;
+    }
+    
+    // Capacity
+    if (!capacity) {
+        showAlert('Capacity is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveInteger(capacity)) {
+        showAlert('Capacity must be a positive integer', 'danger');
+        isValid = false;
+    }
+    
+    // Base Price
+    if (!basePrice) {
+        showAlert('Base price is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveNumber(basePrice)) {
+        showAlert('Base price must be a positive number', 'danger');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+// Validate Event Space Update Form
+function validateEventSpaceUpdateForm() {
+    ValidationUtils.clearFormErrors('eventSpaceUpdateForm');
+    let isValid = true;
+    
+    const form = document.getElementById('eventSpaceUpdateForm');
+    const name = form.querySelector('[name="name"]').value.trim();
+    const capacity = form.querySelector('[name="capacity"]').value;
+    const basePrice = form.querySelector('[name="basePrice"]').value;
+    const floorNumber = form.querySelector('[name="floorNumber"]').value;
+    
+    // Name
+    if (!name) {
+        showAlert('Event space name is required', 'danger');
+        isValid = false;
+    } else if (name.length < 3 || name.length > 100) {
+        showAlert('Event space name must be between 3 and 100 characters', 'danger');
+        isValid = false;
+    }
+    
+    // Capacity
+    if (!capacity) {
+        showAlert('Capacity is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveInteger(capacity)) {
+        showAlert('Capacity must be a positive integer', 'danger');
+        isValid = false;
+    }
+    
+    // Base Price
+    if (!basePrice) {
+        showAlert('Base price is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveNumber(basePrice)) {
+        showAlert('Base price must be a positive number', 'danger');
+        isValid = false;
+    }
+    
+    // Floor Number
+    if (!floorNumber) {
+        showAlert('Floor number is required', 'danger');
+        isValid = false;
+    } else if (!ValidationUtils.isPositiveInteger(floorNumber)) {
+        showAlert('Floor number must be a positive integer', 'danger');
+        isValid = false;
+    }
+    
+    return isValid;
+}

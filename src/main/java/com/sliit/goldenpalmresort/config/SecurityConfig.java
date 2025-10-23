@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/manager/**").hasRole("MANAGER")
                 .requestMatchers("/api/frontdesk/**").hasAnyRole("FRONT_DESK", "MANAGER", "ADMIN")
                 .requestMatchers("/api/payment-officer/**").hasAnyRole("PAYMENT_OFFICER", "MANAGER", "ADMIN")
+                .requestMatchers("/api/refund-requests/**").hasAnyRole("PAYMENT_OFFICER", "MANAGER", "ADMIN", "GUEST")
                 .requestMatchers("/api/rooms/**").permitAll()
                 .requestMatchers("/api/event-spaces/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/bookings/available-rooms").permitAll()

@@ -95,6 +95,9 @@
                         <a class="nav-link" href="#pending" data-bs-toggle="tab">
                             <i class="fas fa-clock me-2"></i> Pending Payments
                         </a>
+                        <a class="nav-link" href="#refund-requests" data-bs-toggle="tab">
+                            <i class="fas fa-hand-holding-usd me-2"></i> Refund Requests
+                        </a>
                         <a class="nav-link" href="#refunds" data-bs-toggle="tab">
                             <i class="fas fa-undo me-2"></i> Refunds
                         </a>
@@ -296,6 +299,49 @@
                         </div>
                     </div>
 
+                    <!-- Refund Requests Tab -->
+                    <div class="tab-pane fade" id="refund-requests">
+                        <div class="p-4">
+                            <h2 class="mb-4">
+                                <i class="fas fa-hand-holding-usd me-2"></i>
+                                Refund Requests
+                            </h2>
+                            
+                            <div class="table-container">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5><i class="fas fa-list me-2"></i>Pending Refund Requests</h5>
+                                    <button class="btn btn-primary btn-sm" onclick="loadRefundRequests()">
+                                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Request ID</th>
+                                                <th>Guest</th>
+                                                <th>Booking Ref</th>
+                                                <th>Type</th>
+                                                <th>Amount</th>
+                                                <th>Bank Details</th>
+                                                <th>Status</th>
+                                                <th>Created</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="refundRequestsTable">
+                                            <tr>
+                                                <td colspan="9" class="text-center text-muted">
+                                                    <i class="fas fa-spinner fa-spin me-2"></i>Loading refund requests...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Refunds Tab -->
                     <div class="tab-pane fade" id="refunds">
                         <div class="p-4">
@@ -449,6 +495,26 @@
         </div>
     </div>
 
+    <!-- Refund Request Details Modal -->
+    <div class="modal fade" id="refundRequestModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Refund Request Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="refundRequestDetails">
+                    <!-- Details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" onclick="rejectRefundRequest()">Reject</button>
+                    <button type="button" class="btn btn-success" onclick="approveRefundRequest()">Approve & Create Refund</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Refund Modal -->
     <div class="modal fade" id="refundModal" tabindex="-1">
         <div class="modal-dialog">
@@ -488,4 +554,4 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/payment-officer.js"></script>
 </body>
-</html> 
+</html>

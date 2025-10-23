@@ -4,9 +4,11 @@ import com.sliit.goldenpalmresort.dto.EventBookingRequest;
 import com.sliit.goldenpalmresort.dto.EventBookingResponse;
 import com.sliit.goldenpalmresort.model.EventBooking;
 import com.sliit.goldenpalmresort.model.EventSpace;
+import com.sliit.goldenpalmresort.model.Payment;
 import com.sliit.goldenpalmresort.model.User;
 import com.sliit.goldenpalmresort.repository.EventBookingRepository;
 import com.sliit.goldenpalmresort.repository.EventSpaceRepository;
+import com.sliit.goldenpalmresort.repository.PaymentRepository;
 import com.sliit.goldenpalmresort.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,9 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +35,9 @@ public class EventBookingService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private PaymentRepository paymentRepository;
     
     public EventBookingResponse createEventBooking(EventBookingRequest request, String username) {
         // Validate request
@@ -76,6 +83,18 @@ public class EventBookingService {
         
         // Save event booking
         eventBooking = eventBookingRepository.save(eventBooking);
+        
+        // Create a COMPLETED payment for this event booking
+        Payment payment = new Payment();
+        payment.setEventBooking(eventBooking);
+        payment.setAmount(totalAmount);
+        payment.setPaymentMethod(Payment.PaymentMethod.CREDIT_CARD); // Default payment method
+        payment.setPaymentStatus(Payment.PaymentStatus.COMPLETED);
+        payment.setPaymentDate(LocalDateTime.now()); // Set payment date to now
+        payment.setTransactionId("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        payment.setProcessedBy(currentUser.getUsername());
+        payment.setNotes("Payment processed for event booking " + eventBooking.getBookingReference());
+        paymentRepository.save(payment);
         
         return EventBookingResponse.from(eventBooking);
     }
