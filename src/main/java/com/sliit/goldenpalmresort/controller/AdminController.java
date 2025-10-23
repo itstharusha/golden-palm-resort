@@ -221,7 +221,7 @@ public class AdminController {
             public ResponseEntity<List<String>> getUserRoles() {
                 try {
                     List<String> roles = List.of(
-                        "ADMIN", "MANAGER", "FRONT_DESK", "PAYMENT_OFFICER", "GUEST"
+                        "ADMIN", "MANAGER", "FRONT_DESK", "PAYMENT_OFFICER", "BACK_OFFICE_STAFF", "GUEST"
                     );
                     return ResponseEntity.ok(roles);
                 } catch (Exception e) {

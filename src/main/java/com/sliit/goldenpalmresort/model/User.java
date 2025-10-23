@@ -34,6 +34,7 @@ public class User implements UserDetails {
     private String phone;
     
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private UserRole role;
     
     @Column(name = "is_active")
@@ -140,6 +141,6 @@ public class User implements UserDetails {
     }
     
     public enum UserRole {
-        GUEST, ADMIN, MANAGER, FRONT_DESK, PAYMENT_OFFICER
+        GUEST, ADMIN, MANAGER, FRONT_DESK, PAYMENT_OFFICER, BACK_OFFICE_STAFF
     }
 } 

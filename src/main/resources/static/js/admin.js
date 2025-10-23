@@ -307,6 +307,7 @@ function displayUsers(users) {
                     <option value="MANAGER" ${user.role === 'MANAGER' ? 'selected' : ''}>Manager</option>
                     <option value="FRONT_DESK" ${user.role === 'FRONT_DESK' ? 'selected' : ''}>Front Desk</option>
                     <option value="PAYMENT_OFFICER" ${user.role === 'PAYMENT_OFFICER' ? 'selected' : ''}>Payment Officer</option>
+                    <option value="BACK_OFFICE_STAFF" ${user.role === 'BACK_OFFICE_STAFF' ? 'selected' : ''}>Back Office Staff</option>
                     <option value="GUEST" ${user.role === 'GUEST' ? 'selected' : ''}>Guest</option>
                 </select>
             </td>
